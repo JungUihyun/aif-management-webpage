@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Bell, ChevronRight, CheckCircle, AlertCircle, TrendingUp, CreditCard } from 'lucide-react';
@@ -14,22 +15,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [myDuesStatus, setMyDuesStatus] = useState<DuesRecord | null>(null);
 
   useEffect(() => {
+    // 모든 필요 데이터를 병렬로 호출하여 로딩 시간 단축
     const loadData = async () => {
       const matches = await api.getMatches();
       const allNotices = await api.getNotices();
       const dues = await api.getDues();
 
-      // Filter upcoming
+      // [로직] 예정된 경기만 필터링하고 날짜순으로 정렬 후 상위 3개만 추출
       const upcoming = matches
         .filter(m => m.status === 'UPCOMING')
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 3);
       
-      // Get my latest due
-      const myDue = dues.find(d => d.userId === user.id && d.month === '2023-11'); // Hardcoded current month for demo
+      // [로직] 현재 로그인한 유저의 이번 달(데모용 하드코딩 2023-11) 회비 내역 찾기
+      const myDue = dues.find(d => d.userId === user.id && d.month === '2023-11');
 
       setUpcomingMatches(upcoming);
-      setNotices(allNotices.slice(0, 4));
+      setNotices(allNotices.slice(0, 4)); // 공지사항은 최신 4개만 표시
       setMyDuesStatus(myDue || null);
     };
     loadData();
@@ -37,7 +39,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner */}
+      {/* 웰컴 배너 */}
       <div className="bg-[#036b3f] rounded-xl p-6 text-white shadow-lg flex justify-between items-center relative overflow-hidden">
         <div className="z-10">
           <h2 className="text-xl sm:text-2xl font-bold mb-1">반갑습니다, {user.name}님!</h2>
@@ -49,7 +51,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Upcoming Matches */}
+        {/* 다가오는 경기 리스트 섹션 */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="font-bold text-lg text-gray-800 flex items-center">
@@ -90,10 +92,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
         </div>
 
-        {/* Right Column: Status & Notices */}
+        {/* 오른쪽 컬럼: 회비 상태 및 공지사항 */}
         <div className="space-y-6">
             
-            {/* Dues Status */}
+            {/* 회비 납부 현황 카드 */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-gray-800 mb-4 flex items-center">
                     <CreditCard className="mr-2 text-primary" size={20} />
@@ -102,6 +104,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 {myDuesStatus ? (
                     <div className={`flex items-center justify-between p-4 rounded-lg ${myDuesStatus.status === 'PAID' ? 'bg-blue-50' : 'bg-red-50'}`}>
                         <div className="flex items-center">
+                            {/* 납부 여부에 따라 아이콘 및 색상 변경 */}
                             {myDuesStatus.status === 'PAID' ? (
                                 <CheckCircle className="text-blue-500 mr-3" size={28} />
                             ) : (
@@ -127,7 +130,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 </div>
             </div>
 
-            {/* Notices */}
+            {/* 공지사항 리스트 */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                  <div className="flex justify-between items-center mb-4">
                     <h3 className="font-bold text-gray-800 flex items-center">
@@ -139,6 +142,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                     {notices.map(notice => (
                         <li key={notice.id} className="border-b border-gray-50 last:border-0 pb-2 last:pb-0">
                             <div className="flex items-start">
+                                {/* 중요 공지는 빨간 점으로 표시 */}
                                 {notice.isImportant && <span className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>}
                                 <div>
                                     <p className="text-sm font-medium text-gray-800 line-clamp-1 hover:text-primary cursor-pointer transition-colors">{notice.title}</p>

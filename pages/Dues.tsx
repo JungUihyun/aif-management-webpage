@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CreditCard, AlertCircle, CheckCircle, Send } from 'lucide-react';
 import { User, DuesRecord, UserRole } from '../types';
@@ -8,27 +9,32 @@ interface DuesProps {
 }
 
 const Dues: React.FC<DuesProps> = ({ user }) => {
-  const [activeTab, setActiveTab] = useState<'status' | 'all'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'all'>('status'); // 탭 상태: 개인 내역 vs 전체 관리
   const [duesList, setDuesList] = useState<DuesRecord[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
+    // 회비 목록과 유저 목록을 동시에 호출 (Promise.all)
     Promise.all([api.getDues(), api.getUsers()]).then(([d, u]) => {
         setDuesList(d);
         setUsers(u);
     });
   }, []);
 
+  // 필터링: 나의 회비 내역
   const myDues = duesList.filter(d => d.userId === user.id);
+  
+  // 필터링: 미납자 목록 (관리자용)
   const unpaidUsers = duesList.filter(d => d.status === 'UNPAID');
 
+  // ID로 유저 이름 찾기 헬퍼
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">회비 관리</h1>
 
-      {/* Summary Card */}
+      {/* 요약 카드 */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center justify-between">
           <div className="mb-4 md:mb-0">
              <p className="text-sm text-gray-500 mb-1">내 납부 현황 (2023년)</p>
@@ -40,7 +46,7 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
           </div>
       </div>
 
-      {/* Tabs */}
+      {/* 탭 네비게이션 */}
       <div className="flex border-b border-gray-200">
         <button 
            onClick={() => setActiveTab('status')}
@@ -48,7 +54,7 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
         >
             내 납부 내역
         </button>
-        {/* Only Executives/Managers can see all */}
+        {/* 관리자(임원/매니저)에게만 '전체 납부 관리' 탭 표시 */}
         {(user.role === UserRole.EXECUTIVE || user.role === UserRole.MANAGER) && (
             <button 
                 onClick={() => setActiveTab('all')}
@@ -60,6 +66,7 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        {/* 개인 납부 내역 테이블 */}
         {activeTab === 'status' && (
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -89,6 +96,7 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
             </table>
         )}
 
+        {/* 전체 관리 테이블 (관리자용) */}
         {activeTab === 'all' && (
             <div className="p-4">
                <div className="flex justify-between items-center mb-4">

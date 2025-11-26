@@ -13,27 +13,30 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
   const [stats, setStats] = useState<UserStats | null>(null);
 
   useEffect(() => {
+    // 유저 ID를 기반으로 통계 데이터 호출
     api.getUserStats(user.id).then(setStats);
   }, [user.id]);
 
+  // 막대 그래프용 데이터 포맷팅 (경기/골/어시)
   const chartData = stats ? [
     { name: '경기', value: user.matches || stats.matchesPlayed },
     { name: '골', value: stats.goals },
     { name: '어시', value: stats.assists },
   ] : [];
 
+  // 도넛 차트(출석률)용 데이터 포맷팅
   const donutData = stats ? [
     { name: 'attended', value: stats.attendanceRate },
     { name: 'missed', value: 100 - stats.attendanceRate }
   ] : [];
 
-  const COLORS = ['#036b3f', '#e5e7eb'];
+  const COLORS = ['#036b3f', '#e5e7eb']; // 도넛 차트 색상 (메인색, 회색)
 
   return (
     <div className="space-y-6">
-      {/* Profile Header */}
+      {/* 프로필 헤더 카드 */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center sm:flex-row sm:items-start text-center sm:text-left relative overflow-hidden">
-         {/* Background Decoration */}
+         {/* 배경 데코레이션 아이콘 */}
          <div className="absolute top-0 right-0 p-4 opacity-5">
             <Trophy size={120} />
          </div>
@@ -62,6 +65,7 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                  </button>
              </div>
              
+             {/* 유저 기본 정보 그리드 */}
              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left w-full">
                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
                      <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">학번</p>
@@ -84,7 +88,7 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Stats Graph */}
+          {/* 개인 기록 막대 그래프 (Recharts 사용) */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
               <h3 className="font-bold text-gray-800 mb-4 flex items-center">
                   <Activity size={20} className="mr-2 text-primary"/>
@@ -106,7 +110,7 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
               </div>
           </div>
 
-          {/* Attendance */}
+          {/* 참석률 도넛 차트 */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
               <h3 className="font-bold text-gray-800 mb-4 flex items-center">
                   <Calendar size={20} className="mr-2 text-primary"/>
@@ -133,6 +137,7 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                           </Pie>
                         </PieChart>
                       </ResponsiveContainer>
+                      {/* 차트 중앙 텍스트 오버레이 */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                           <span className="text-4xl font-bold text-gray-800">{stats?.attendanceRate}%</span>
                           <span className="text-sm text-gray-400 mt-1">Excellent!</span>
