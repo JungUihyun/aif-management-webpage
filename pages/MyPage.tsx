@@ -67,8 +67,11 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
           <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-4">
             <div>
               <div className="flex items-center justify-center sm:justify-start">
-                <h1 className="text-2xl font-bold text-gray-800 mr-2">
+                <h1 className="flex items-center text-2xl font-bold text-gray-800 mr-2">
                   {user.name}
+                  <span className="ml-1 bg-primary text-white px-2 py-1 rounded-md text-xs font-semibold">
+                    {user.backNumber}
+                  </span>
                 </h1>
                 <span
                   className={`px-2 py-0.5 rounded text-xs font-bold ${

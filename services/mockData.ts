@@ -161,6 +161,7 @@ const mapUserFromDB = (dbUser: any): User => {
     joinedAt: dbUser.joined_at,
     matches: dbUser.matches || 0,
     role: dbUser.role as UserRole,
+    backNumber: dbUser.back_number,
   };
 };
 
