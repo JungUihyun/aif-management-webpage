@@ -118,50 +118,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
         {/* 오른쪽 컬럼: 회비 상태 및 공지사항 */}
         <div className="space-y-6">
-          {/* 회비 납부 현황 카드 */}
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="font-bold text-gray-800 mb-4 flex items-center">
-              <CreditCard className="mr-2 text-primary" size={20} />
-              이번 달 회비
-            </h3>
-            {myDuesStatus ? (
-              <div
-                className={`flex items-center justify-between p-4 rounded-lg ${
-                  myDuesStatus.status === "PAID" ? "bg-blue-50" : "bg-red-50"
-                }`}
-              >
-                <div className="flex items-center">
-                  {/* 납부 여부에 따라 아이콘 및 색상 변경 */}
-                  {myDuesStatus.status === "PAID" ? (
-                    <CheckCircle className="text-blue-500 mr-3" size={28} />
-                  ) : (
-                    <AlertCircle className="text-red-500 mr-3" size={28} />
-                  )}
-                  <div>
-                    <p className="font-bold text-gray-800 text-lg">
-                      {myDuesStatus.status === "PAID"
-                        ? "납부 완료"
-                        : "미납 상태"}
-                    </p>
-                    <p className="text-sm text-gray-500 font-medium">
-                      {myDuesStatus.amount.toLocaleString()}원
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500">납부 내역이 없습니다.</div>
-            )}
-            <div className="mt-4 text-center">
-              <Link
-                to="/dues"
-                className="text-sm text-primary font-bold hover:underline"
-              >
-                자세히 보기
-              </Link>
-            </div>
-          </div>
-
           {/* 공지사항 리스트 */}
           <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-4">

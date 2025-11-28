@@ -436,7 +436,7 @@ const AppContent = () => {
           <Route path="/" element={<Dashboard user={user} />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/match/:id" element={<MatchDetail user={user} />} />
-          <Route path="/dues" element={<Dues user={user} />} />
+          {/* <Route path="/dues" element={<Dues user={user} />} /> */}
           <Route path="/mypage" element={<MyPage user={user} />} />
           {/* 관리자 페이지는 EXECUTIVE 권한일 떄만 접근 가능 */}
           <Route
