@@ -54,7 +54,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
           <div className="flex justify-between items-start mb-4">
             <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
               {match.status === MatchStatus.UPCOMING
-                ? "D-Day 예정"
+                ? "경기 예정"
                 : "경기 종료"}
             </span>
             {/* 관리자에게만 수정 버튼 표시 */}
@@ -162,17 +162,28 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
             <div className="bg-gray-50 rounded-xl p-4 max-h-[500px] overflow-y-auto">
               <div className="space-y-2">
                 {match.participants.length > 0 ? (
-                  match.participants.map((pid, idx) => (
+                  match.participants.map((participant, idx) => (
                     <div
                       key={idx}
                       className="flex items-center p-2 bg-white rounded-lg shadow-sm"
                     >
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex-shrink-0 mr-3"></div>
+                      <img
+                        src={participant.avatarUrl}
+                        alt={participant.name}
+                        className="w-10 h-10 rounded-full border border-gray-200 object-cover bg-gray-100 flex-shrink-0 mr-3"
+                      />
                       <div>
-                        {/* 실제 앱에서는 ID로 유저 정보를 조회하여 이름 표시 */}
-                        <div className="font-medium text-sm">회원 {pid}</div>
-                        <div className="text-xs text-gray-400">
-                          포지션: 미정
+                        <div className="font-bold text-gray-800 flex items-center">
+                          {participant.name}
+                          <span className="ml-2 text-[10px] text-gray-400">
+                            ({participant.id})
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          주 포지션:{" "}
+                          <span className="font-medium text-primary">
+                            {participant.position}
+                          </span>
                         </div>
                       </div>
                     </div>

@@ -165,9 +165,14 @@ const mapUserFromDB = (dbUser: any): User => {
 };
 
 const mapMatchFromDB = (dbMatch: any): Match => {
+  const participants = dbMatch.match_participants
+    ? dbMatch.match_participants.map((p: any) => mapUserFromDB(p.users))
+    : [];
+
   return {
     ...dbMatch,
-    participants: dbMatch.participants || [],
+    time: dbMatch.time ? dbMatch.time.substring(0, 5) : "",
+    participants: participants,
   };
 };
 
@@ -268,7 +273,7 @@ export const api = {
     try {
       const { data, error } = await supabase
         .from("matches")
-        .select("*")
+        .select("*, match_participants(users(*))")
         .order("date", { ascending: true });
 
       if (error) throw error;
@@ -286,7 +291,7 @@ export const api = {
     try {
       const { data, error } = await supabase
         .from("matches")
-        .select("*")
+        .select("*, match_participants(users(*))")
         .eq("id", id)
         .single();
 
@@ -308,7 +313,6 @@ export const api = {
           {
             ...matchData,
             status: MatchStatus.UPCOMING,
-            participants: [],
           },
         ])
         .select()
