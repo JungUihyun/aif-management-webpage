@@ -27,7 +27,7 @@ export const MOCK_USERS: User[] = [
     matches: 12,
     role: UserRole.EXECUTIVE,
     position: "DF",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=shinyung",
+    avatarUrl: "",
     joinedAt: "2024-03-01",
   },
   {
@@ -40,7 +40,7 @@ export const MOCK_USERS: User[] = [
     matches: 20,
     role: UserRole.MANAGER,
     position: "DF",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=manager",
+    avatarUrl: "",
     joinedAt: "2020-03-01",
   },
   {
@@ -53,7 +53,7 @@ export const MOCK_USERS: User[] = [
     matches: 35,
     role: UserRole.EXECUTIVE,
     position: "FW",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=prez",
+    avatarUrl: "",
     joinedAt: "2019-03-01",
   },
 ];
@@ -201,6 +201,68 @@ export const api = {
     }
   },
 
+  // 회원가입
+  signUp: async (
+    user: Omit<User, "matches" | "role" | "avatarUrl" | "joinedAt">
+  ): Promise<boolean> => {
+    // 1. 공통 기본값 설정
+    const baseUser = {
+      ...user,
+      matches: 0,
+      role: UserRole.MEMBER, // 기본 권한은 일반 멤버
+      avatar_url: null,
+    };
+
+    try {
+      // 2. 학번 중복 체크
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+
+      if (existingUser) {
+        alert("이미 등록된 학번입니다.");
+        return false;
+      }
+
+      // 3. DB Insert
+      const { error } = await supabase.from("users").insert([
+        {
+          id: baseUser.id,
+          password: baseUser.password,
+          name: baseUser.name,
+          short_name: baseUser.shortName,
+          birth: baseUser.birth,
+          gender: baseUser.gender,
+          position: baseUser.position,
+          role: baseUser.role,
+          matches: baseUser.matches,
+        },
+      ]);
+
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      // Fallback: DB 연결 실패 시 Mock Data에 추가 (로컬 테스트용)
+      console.warn("DB Error, falling back to mock:", e);
+      const isExist = MOCK_USERS.some((u) => u.id === user.id);
+      if (isExist) {
+        alert("이미 등록된 학번입니다 (Mock).");
+        return false;
+      }
+
+      // Mock Data에는 DB의 자동 날짜 기능이 없으므로 여기서 JS로 생성해줍니다.
+      MOCK_USERS.push({
+        ...baseUser,
+        shortName: baseUser.shortName, // 타입 맞추기 위해 명시
+        avatarUrl: getDefaultAvatar(baseUser.gender),
+        joinedAt: new Date().toISOString(),
+      });
+      return true;
+    }
+  },
+
   // 경기 목록 조회
   getMatches: async (): Promise<Match[]> => {
     try {
@@ -308,7 +370,7 @@ export const api = {
     }
   },
 
-  // 유저 목록 조회 (이전 응답에서 잘렸던 부분 복구)
+  // 유저 목록 조회
   getUsers: async (): Promise<User[]> => {
     try {
       const { data, error } = await supabase.from("users").select("*");

@@ -20,6 +20,8 @@ import {
   Settings,
   Shield,
   UserCircle,
+  UserPlus,
+  ArrowLeft,
 } from "lucide-react";
 
 // --- Auth Context (전역 인증 상태 관리) ---
@@ -79,15 +81,30 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// --- 로그인 페이지 컴포넌트 ---
+// --- 로그인/회원가입 페이지 컴포넌트 ---
 const LoginPage = () => {
   const { login } = useAuth();
+  const [isLoginView, setIsLoginView] = useState(true); // true: 로그인 화면, false: 회원가입 화면
+
+  // 로그인 폼 상태
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // 회원가입 폼 상태
+  const [signUpData, setSignUpData] = useState({
+    id: "",
+    password: "",
+    passwordConfirm: "",
+    name: "",
+    shortName: "",
+    birth: "",
+    gender: 1,
+    position: "MF",
+  });
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsSubmitting(true);
@@ -98,135 +115,296 @@ const LoginPage = () => {
     setIsSubmitting(false);
   };
 
+  const handleSignUpChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setSignUpData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    // 유효성 검사
+    if (signUpData.password !== signUpData.passwordConfirm) {
+      setError("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+    if (signUpData.birth.length !== 8) {
+      setError("생년월일은 8자리로 입력해주세요. (예: 20040101)");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const success = await api.signUp({
+        id: signUpData.id,
+        password: signUpData.password,
+        name: signUpData.name,
+        shortName: signUpData.shortName || signUpData.name, // 별명 없으면 이름 사용
+        birth: parseInt(signUpData.birth),
+        gender: Number(signUpData.gender),
+        position: signUpData.position,
+      });
+
+      if (success) {
+        alert("회원가입이 완료되었습니다! 로그인해주세요.");
+        setIsLoginView(true); // 로그인 화면으로 전환
+        // 아이디 필드 미리 채워주기
+        setId(signUpData.id);
+        setPassword("");
+      }
+    } catch (e) {
+      setError("회원가입 중 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 뷰 전환 시 에러 메시지 초기화
+  useEffect(() => {
+    setError("");
+  }, [isLoginView]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 to-green-800 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full">
-        <div className="text-center mb-8">
-          {/* 축구공 아이콘 로고 */}
-          <div className="w-28 h-28 mx-auto mb-4 flex items-center justify-center bg-green-50 rounded-full">
-            <div className="text-6xl">⚽</div>
+      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full animate-in fade-in zoom-in duration-300">
+        {/* 헤더 섹션 */}
+        <div className="text-center mb-6 relative">
+          {!isLoginView && (
+            <button
+              onClick={() => setIsLoginView(true)}
+              className="absolute top-0 left-0 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <ArrowLeft size={24} />
+            </button>
+          )}
+          <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center bg-green-50 rounded-full">
+            <div className="text-5xl">⚽</div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">신융 축구동아리</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            {isLoginView ? "FC AIF" : "회원가입"}
+          </h1>
           <p className="text-gray-500 text-sm mt-1">
-            부원 관리를 위한 통합 플랫폼
+            {isLoginView
+              ? "부원 관리를 위한 통합 플랫폼"
+              : "새로운 부원이 되어주세요!"}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              학번
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <UserIcon size={18} className="text-gray-400" />
+        {/* 로그인 폼 */}
+        {isLoginView ? (
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                학번
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <UserIcon size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={id}
+                  onChange={(e) => setId(e.target.value)}
+                  className="pl-10 block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
+                  placeholder="학번을 입력하세요"
+                  required
+                />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                비밀번호
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
+                  placeholder="비밀번호"
+                  required
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="text-red-500 text-xs text-center font-medium bg-red-50 p-2 rounded">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow-md disabled:opacity-50"
+            >
+              {isSubmitting ? "로그인 중..." : "로그인"}
+            </button>
+
+            <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+              <p className="text-sm text-gray-600 mb-2">계정이 없으신가요?</p>
+              <button
+                type="button"
+                onClick={() => setIsLoginView(false)}
+                className="text-primary font-bold hover:underline flex items-center justify-center w-full"
+              >
+                <UserPlus size={16} className="mr-1" /> 회원가입 하기
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* 회원가입 폼 */
+          <form onSubmit={handleSignUpSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  이름
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={signUpData.name}
+                  onChange={handleSignUpChange}
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                  placeholder="본명"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  학번
+                </label>
+                <input
+                  type="text"
+                  name="id"
+                  value={signUpData.id}
+                  onChange={handleSignUpChange}
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                  placeholder="2024..."
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                별명 (유니폼 마킹용)
+              </label>
               <input
                 type="text"
-                value={id}
-                onChange={(e) => setId(e.target.value)}
-                className="pl-10 block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
-                placeholder="학번을 입력하세요 (예: 202411523)"
-                required
+                name="shortName"
+                value={signUpData.shortName}
+                onChange={handleSignUpChange}
+                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                placeholder="예: SHINYUNG (미입력시 본명)"
               />
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              비밀번호
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock size={18} className="text-gray-400" />
-              </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                비밀번호
+              </label>
               <input
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 block w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-sm"
-                placeholder="비밀번호"
+                name="password"
+                value={signUpData.password}
+                onChange={handleSignUpChange}
+                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                placeholder="비밀번호 입력"
                 required
               />
             </div>
-          </div>
+            <div>
+              <input
+                type="password"
+                name="passwordConfirm"
+                value={signUpData.passwordConfirm}
+                onChange={handleSignUpChange}
+                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                placeholder="비밀번호 확인"
+                required
+              />
+            </div>
 
-          {error && (
-            <div className="text-red-500 text-xs text-center">{error}</div>
-          )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  생년월일 (8자리)
+                </label>
+                <input
+                  type="text"
+                  name="birth"
+                  value={signUpData.birth}
+                  onChange={handleSignUpChange}
+                  maxLength={8}
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                  placeholder="20040101"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  성별
+                </label>
+                <select
+                  name="gender"
+                  value={signUpData.gender}
+                  onChange={handleSignUpChange}
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                >
+                  <option value={1}>남성</option>
+                  <option value={2}>여성</option>
+                </select>
+              </div>
+            </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow-md disabled:opacity-50"
-          >
-            {isSubmitting ? "로그인 중..." : "로그인"}
-          </button>
-        </form>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                주 포지션
+              </label>
+              <select
+                name="position"
+                value={signUpData.position}
+                onChange={handleSignUpChange}
+                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+              >
+                <option value="FW">FW (공격수)</option>
+                <option value="MF">MF (미드필더)</option>
+                <option value="DF">DF (수비수)</option>
+                <option value="GK">GK (골키퍼)</option>
+              </select>
+            </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-400">테스트 계정: 202411523 / 1234</p>
-          <button className="text-xs text-primary mt-2 hover:underline">
-            비밀번호를 잊으셨나요?
-          </button>
-        </div>
+            {error && (
+              <div className="text-red-500 text-xs text-center font-medium bg-red-50 p-2 rounded">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow-md mt-2 disabled:opacity-50"
+            >
+              {isSubmitting ? "가입 처리 중..." : "가입 완료"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsLoginView(true)}
+              className="w-full text-gray-500 text-xs py-2 hover:text-gray-800"
+            >
+              취소하고 로그인으로 돌아가기
+            </button>
+          </form>
+        )}
       </div>
-    </div>
-  );
-};
-
-// --- 권한 변경 테스트용 플로팅 버튼 ---
-const RoleSwitcher = () => {
-  const { user, updateUserRole } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-
-  if (!user) return null;
-
-  return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
-      {isOpen && (
-        <div className="mb-2 bg-white rounded-lg shadow-xl border border-gray-200 p-2 space-y-1 animate-in slide-in-from-bottom-5">
-          <div className="text-xs font-bold text-gray-400 px-2 py-1">
-            권한 변경 (테스트용)
-          </div>
-          <button
-            onClick={() => updateUserRole(UserRole.MEMBER)}
-            className={`w-full text-left px-3 py-2 rounded text-xs font-medium flex items-center ${
-              user.role === UserRole.MEMBER
-                ? "bg-green-50 text-green-700"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            }`}
-          >
-            <UserCircle size={14} className="mr-2" /> 일반 멤버
-          </button>
-          <button
-            onClick={() => updateUserRole(UserRole.MANAGER)}
-            className={`w-full text-left px-3 py-2 rounded text-xs font-medium flex items-center ${
-              user.role === UserRole.MANAGER
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            }`}
-          >
-            <Settings size={14} className="mr-2" /> 매니저
-          </button>
-          <button
-            onClick={() => updateUserRole(UserRole.EXECUTIVE)}
-            className={`w-full text-left px-3 py-2 rounded text-xs font-medium flex items-center ${
-              user.role === UserRole.EXECUTIVE
-                ? "bg-purple-50 text-purple-700"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            }`}
-          >
-            <Shield size={14} className="mr-2" /> 임원 (회장단)
-          </button>
-        </div>
-      )}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
-        title="Developer Menu"
-      >
-        <Settings size={20} />
-      </button>
     </div>
   );
 };
@@ -268,7 +446,6 @@ const AppContent = () => {
             }
           />
         </Routes>
-        <RoleSwitcher />
       </Layout>
     </Router>
   );
