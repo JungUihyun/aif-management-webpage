@@ -176,6 +176,15 @@ const mapMatchFromDB = (dbMatch: any): Match => {
   };
 };
 
+const mapNoticeFromDB = (dbNotice: any): Notice => {
+  return {
+    ...dbNotice,
+    createdAt: dbNotice.created_at,
+    aurthorId: dbNotice.author_id,
+    isImportant: dbNotice.is_important,
+  };
+};
+
 // --- 3. 실제 API 로직 ---
 export const api = {
   // 로그인
@@ -340,39 +349,33 @@ export const api = {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error || !data || data.length === 0) throw error;
-
-      return data.map((n: any) => ({
-        id: n.id,
-        title: n.title,
-        content: n.content,
-        date: n.created_at ? n.created_at.split("T")[0] : "",
-        authorId: n.author_id,
-        isImportant: n.is_important,
-      }));
+      if (error) throw error;
+      if (data && data.length > 0) {
+        return data.map(mapNoticeFromDB);
+      }
     } catch (e) {
       return [...MOCK_NOTICES];
     }
   },
 
   // 회비 내역 조회
-  getDues: async (): Promise<DuesRecord[]> => {
-    try {
-      const { data, error } = await supabase.from("dues").select("*");
-      if (error || !data || data.length === 0) throw error;
+  // getDues: async (): Promise<DuesRecord[]> => {
+  //   try {
+  //     const { data, error } = await supabase.from("dues").select("*");
+  //     if (error || !data || data.length === 0) throw error;
 
-      return data.map((d: any) => ({
-        id: d.id,
-        userId: d.user_id,
-        month: d.month,
-        amount: d.amount,
-        status: d.status,
-        paidDate: d.paid_date,
-      }));
-    } catch (e) {
-      return [...MOCK_DUES];
-    }
-  },
+  //     return data.map((d: any) => ({
+  //       id: d.id,
+  //       userId: d.user_id,
+  //       month: d.month,
+  //       amount: d.amount,
+  //       status: d.status,
+  //       paidDate: d.paid_date,
+  //     }));
+  //   } catch (e) {
+  //     return [...MOCK_DUES];
+  //   }
+  // },
 
   // 유저 목록 조회
   getUsers: async (): Promise<User[]> => {

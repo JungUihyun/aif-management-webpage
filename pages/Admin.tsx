@@ -32,7 +32,7 @@ const Admin: React.FC = () => {
       <h1 className="text-2xl font-bold text-gray-800">관리자 페이지</h1>
 
       {/* 회비 자동 납부 동기화 섹션 */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      {/* <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-gray-800 flex items-center">
             <div className="w-6 h-6 bg-yellow-300 rounded mr-2 flex items-center justify-center text-xs font-bold text-black">
@@ -56,7 +56,7 @@ const Admin: React.FC = () => {
           최근 1시간 동안의 입금 내역을 불러와 회비 납부 상태를 자동으로
           업데이트합니다.
         </p>
-      </div>
+      </div> */}
 
       {/* 동아리원 권한 관리 테이블 */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

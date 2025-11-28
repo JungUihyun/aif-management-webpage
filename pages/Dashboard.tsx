@@ -9,7 +9,7 @@ import {
   TrendingUp,
   CreditCard,
 } from "lucide-react";
-import { Match, Notice, DuesRecord, User } from "../types";
+import { Match, Notice, User } from "../types";
 import { api } from "../services/mockData";
 
 interface DashboardProps {
@@ -19,14 +19,14 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
-  const [myDuesStatus, setMyDuesStatus] = useState<DuesRecord | null>(null);
+  // const [myDuesStatus, setMyDuesStatus] = useState<DuesRecord | null>(null);
 
   useEffect(() => {
     // 모든 필요 데이터를 병렬로 호출하여 로딩 시간 단축
     const loadData = async () => {
       const matches = await api.getMatches();
       const allNotices = await api.getNotices();
-      const dues = await api.getDues();
+      // const dues = await api.getDues();
 
       // [로직] 예정된 경기만 필터링하고 날짜순으로 정렬 후 상위 3개만 추출
       const upcoming = matches
@@ -35,13 +35,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         .slice(0, 3);
 
       // [로직] 현재 로그인한 유저의 이번 달(데모용 하드코딩 2023-11) 회비 내역 찾기
-      const myDue = dues.find(
-        (d) => d.userId === user.id && d.month === "2023-11"
-      );
+      // const myDue = dues.find(
+      //   (d) => d.userId === user.id && d.month === "2023-11"
+      // );
 
       setUpcomingMatches(upcoming);
       setNotices(allNotices.slice(0, 4)); // 공지사항은 최신 4개만 표시
-      setMyDuesStatus(myDue || null);
+      // setMyDuesStatus(myDue || null);
     };
     loadData();
   }, [user.id]);
@@ -116,7 +116,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
         </div>
 
-        {/* 오른쪽 컬럼: 회비 상태 및 공지사항 */}
+        {/* 오른쪽 컬럼: 공지사항 */}
         <div className="space-y-6">
           {/* 공지사항 리스트 */}
           <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
@@ -134,7 +134,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 >
                   <div className="flex items-start">
                     {/* 중요 공지는 빨간 점으로 표시 */}
-                    {notice.isImportant && (
+                    {notice.isImportant === 1 && (
                       <span className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
                     )}
                     <div>
@@ -142,7 +142,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                         {notice.title}
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        {notice.date}
+                        {notice.createdAt}
                       </p>
                     </div>
                   </div>
