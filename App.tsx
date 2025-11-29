@@ -365,21 +365,38 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                주 포지션
-              </label>
-              <select
-                name="position"
-                value={signUpData.position}
-                onChange={handleSignUpChange}
-                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
-              >
-                <option value="FW">FW (공격수)</option>
-                <option value="MF">MF (미드필더)</option>
-                <option value="DF">DF (수비수)</option>
-                <option value="GK">GK (골키퍼)</option>
-              </select>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  등번호
+                </label>
+                <input
+                  type="text"
+                  name="backNumber"
+                  value={signUpData.backNumber}
+                  onChange={handleSignUpChange}
+                  maxLength={2}
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                  placeholder="10"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  주 포지션
+                </label>
+                <select
+                  name="position"
+                  value={signUpData.position}
+                  onChange={handleSignUpChange}
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                >
+                  <option value="FW">FW (공격수)</option>
+                  <option value="MF">MF (미드필더)</option>
+                  <option value="DF">DF (수비수)</option>
+                  <option value="GK">GK (골키퍼)</option>
+                </select>
+              </div>
             </div>
 
             {error && (

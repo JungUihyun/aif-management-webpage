@@ -8,6 +8,7 @@ import {
   UserStats,
 } from "../types";
 import { supabase } from "./supabase";
+import bcrypt from "bcryptjs";
 
 /**
  * 이 파일은 백엔드 API와 데이터베이스를 처리하는 서비스 레이어입니다.
@@ -201,8 +202,10 @@ export const api = {
         throw new Error("DB Login Failed");
       }
 
-      if (password && data.password !== password) {
-        return null;
+      if (password) {
+        const isMatch = await bcrypt.compare(password, data.password);
+
+        if (!isMatch) return null;
       }
 
       return mapUserFromDB(data);
@@ -245,7 +248,7 @@ export const api = {
       const { error } = await supabase.from("users").insert([
         {
           id: baseUser.id,
-          password: baseUser.password,
+          password: await bcrypt.hash(baseUser.password, 10),
           name: baseUser.name,
           short_name: baseUser.shortName,
           birth: baseUser.birth,
