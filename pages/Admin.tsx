@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { User, UserRole } from "../types";
 import { api } from "../services/mockData";
+import { getUserRoleLabel } from "../utils/formatters";
 import { Users, AlertTriangle, RefreshCw } from "lucide-react";
 
 const Admin: React.FC = () => {
@@ -114,7 +115,7 @@ const Admin: React.FC = () => {
                                         : "bg-green-100 text-green-800"
                                     }`}
                     >
-                      {user.role}
+                      {getUserRoleLabel(user.role)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -125,9 +126,9 @@ const Admin: React.FC = () => {
                       }
                       className="border border-gray-300 rounded text-sm p-1"
                     >
-                      <option value={UserRole.MEMBER}>MEMBER</option>
-                      <option value={UserRole.MANAGER}>MANAGER</option>
-                      <option value={UserRole.EXECUTIVE}>EXECUTIVE</option>
+                      <option value={UserRole.MEMBER}>회원</option>
+                      <option value={UserRole.MANAGER}>매니저</option>
+                      <option value={UserRole.EXECUTIVE}>임원</option>
                     </select>
                   </td>
                 </tr>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { User, UserStats } from "../types";
 import { api } from "../services/mockData";
+import { getUserRoleLabel } from "../utils/formatters";
 import {
   BarChart,
   Bar,
@@ -69,9 +70,11 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
               <div className="flex items-center justify-center sm:justify-start">
                 <h1 className="flex items-center text-2xl font-bold text-gray-800 mr-2">
                   {user.name}
-                  <span className="ml-1 bg-primary text-white px-2 py-1 rounded-md text-xs font-semibold">
-                    {user.backNumber}
-                  </span>
+                  {user.backNumber && (
+                    <span className="ml-1 bg-primary text-white px-2 py-1 rounded-md text-xs font-semibold">
+                      {user.backNumber}
+                    </span>
+                  )}
                 </h1>
                 <span
                   className={`px-2 py-0.5 rounded text-xs font-bold ${
@@ -82,7 +85,7 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                       : "bg-green-100 text-green-800"
                   }`}
                 >
-                  {user.role}
+                  {getUserRoleLabel(user.role)}
                 </span>
               </div>
               <p className="text-gray-500 font-medium">"{user.shortName}"</p>
