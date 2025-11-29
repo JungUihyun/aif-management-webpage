@@ -373,7 +373,7 @@ const LoginPage = () => {
                 <input
                   type="text"
                   name="backNumber"
-                  value={signUpData.backNumber}
+                  value={signUpData.backNumber || ""}
                   onChange={handleSignUpChange}
                   maxLength={2}
                   className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"

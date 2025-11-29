@@ -237,7 +237,7 @@ export const api = {
         .from("users")
         .select("id")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (existingUser) {
         alert("이미 등록된 학번입니다.");
