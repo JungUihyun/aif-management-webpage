@@ -13,10 +13,49 @@ const Admin: React.FC = () => {
   }, []);
 
   // 유저 권한 변경 핸들러 (임원/매니저/멤버)
-  const handleRoleChange = (userId: string, newRole: UserRole) => {
-    // 실제 앱에서는 await api.updateUserRole(userId, newRole) 호출 필요
-    // 현재는 로컬 상태만 업데이트하여 UI에 즉시 반영
-    setUsers(users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+    // 실수 방지를 위한 확인 메시지
+    if (
+      !window.confirm(
+        `정말로 해당 멤버의 권한을 '${getUserRoleLabel(
+          newRole
+        )}'로 변경하시겠습니까?`
+      )
+    ) {
+      // 취소 시 UI를 원래대로 되돌리기 위해 다시 로드 (혹은 로컬 state rollback)
+      loadUsers();
+      return;
+    }
+
+    try {
+      const success = await api.updateUserRole(userId, newRole);
+      if (success) {
+        // 성공 시 로컬 상태 업데이트 (Optimistic UI)
+        setUsers(
+          users.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+        );
+        // alert("권한이 변경되었습니다."); // 선택사항: 너무 빈번하면 귀찮을 수 있음
+      } else {
+        alert("권한 변경에 실패했습니다.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("오류가 발생했습니다.");
+    }
+  };
+
+  // 권한별 Select Box 스타일 반환 헬퍼
+  const getRoleSelectStyle = (role: UserRole) => {
+    switch (role) {
+      case UserRole.EXECUTIVE:
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case UserRole.MANAGER:
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case UserRole.MEMBER:
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
   };
 
   // 카카오뱅크 입금 내역 동기화 시뮬레이션
@@ -78,10 +117,7 @@ const Admin: React.FC = () => {
                   학번
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  현재 권한
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  권한 변경
+                  권한 설정
                 </th>
               </tr>
             </thead>
@@ -103,33 +139,37 @@ const Admin: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {user.id}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {/* 권한에 따른 배지 색상 구분 */}
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    ${
-                                      user.role === UserRole.EXECUTIVE
-                                        ? "bg-purple-100 text-purple-800"
-                                        : user.role === UserRole.MANAGER
-                                        ? "bg-blue-100 text-blue-800"
-                                        : "bg-green-100 text-green-800"
-                                    }`}
-                    >
-                      {getUserRoleLabel(user.role)}
-                    </span>
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <select
-                      value={user.role}
-                      onChange={(e) =>
-                        handleRoleChange(user.id, e.target.value as UserRole)
-                      }
-                      className="border border-gray-300 rounded text-sm p-1"
-                    >
-                      <option value={UserRole.MEMBER}>회원</option>
-                      <option value={UserRole.MANAGER}>매니저</option>
-                      <option value={UserRole.EXECUTIVE}>임원</option>
-                    </select>
+                    {/* Select Box를 뱃지처럼 스타일링하여 병합 */}
+                    <div className="relative inline-block w-30">
+                      <select
+                        value={user.role}
+                        onChange={
+                          (e) =>
+                            handleRoleChange(
+                              user.id,
+                              e.target.value as UserRole
+                            ) // 즉시 변경 핸들러 호출
+                        }
+                        className={`block w-full pl-3 pr-8 py-2 text-xs font-bold border rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-colors ${getRoleSelectStyle(
+                          user.role
+                        )}`}
+                      >
+                        <option value={UserRole.MEMBER}>회원</option>
+                        <option value={UserRole.MANAGER}>매니저</option>
+                        <option value={UserRole.EXECUTIVE}>임원</option>
+                      </select>
+                      {/* 커스텀 화살표 아이콘 */}
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-600">
+                        <svg
+                          className="fill-current h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               ))}

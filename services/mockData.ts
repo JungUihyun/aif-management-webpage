@@ -392,6 +392,24 @@ export const api = {
     }
   },
 
+  // 유저 권한 수정
+  updateUserRole: async (
+    userId: string,
+    newRole: UserRole
+  ): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ role: newRole })
+        .eq("id", userId);
+
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
   // 유저 개인 통계 조회 (마이페이지용)
   getUserStats: async (userId: string): Promise<UserStats> => {
     // 1. 유저 정보에서 경기 수 가져오기
