@@ -8,17 +8,18 @@ export enum UserRole {
 
 // 경기 상태 정의
 export enum MatchStatus {
-  UPCOMING = "UPCOMING", // 예정됨
-  COMPLETED = "COMPLETED", // 종료됨
-  CANCELLED = "CANCELLED", // 취소됨
+  UPCOMING = "UPCOMING", // 예정
+  COMPLETED = "COMPLETED", // 종료
+  CANCELLED = "CANCELLED", // 취소
 }
 
 // 사용자 정보 인터페이스
 export interface User {
-  id: string; // 학번 (UI 입력 편의성을 위해 string으로 관리하되, 내부적으로 숫자로 취급 가능)
-  password?: string; // 암호화된 비밀번호 (실제 프로덕션에서는 해시값 사용 권장)
+  id: string; // 학번
+  password?: string; // 암호화된 비밀번호
   birth: number; // 생년월일 yyyymmdd 형식
-  gender: number; // 성별 (1: 남성, 2: 여성 등)
+  email: string; // 이메일
+  gender: number; // 성별 (1: 남성, 2: 여성)
   shortName: string; // 별명 (유니폼 등에 표시될 이름)
   name: string; // 본명
   matches: number; // 총 경기 출전 수
