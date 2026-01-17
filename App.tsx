@@ -13,7 +13,7 @@ import Dues from "./pages/Dues";
 import MyPage from "./pages/MyPage";
 import Admin from "./pages/Admin";
 import { User, UserRole } from "./types";
-import { api } from "./services/mockData";
+import { api } from "./services/api";
 import {
   Lock,
   User as UserIcon,
@@ -142,6 +142,7 @@ const LoginPage = () => {
       const success = await api.signUp({
         id: signUpData.id,
         password: signUpData.password,
+        email: `${signUpData.id}@aif.internal`, // 학번을 이용한 이메일 생성
         name: signUpData.name,
         shortName: signUpData.shortName || signUpData.name, // 별명 없으면 이름 사용
         birth: parseInt(signUpData.birth),

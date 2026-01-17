@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { User, UserStats } from "../types";
-import { api } from "../services/mockData";
+import { api } from "../services/api";
 import { getUserRoleLabel } from "../utils/formatters";
 import {
   BarChart,

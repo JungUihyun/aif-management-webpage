@@ -10,7 +10,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { Match, Notice, User } from "../types";
-import { api } from "../services/mockData";
+import { api } from "../services/api";
 
 interface DashboardProps {
   user: User;

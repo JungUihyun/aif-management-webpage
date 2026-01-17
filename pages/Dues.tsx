@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CreditCard, AlertCircle, CheckCircle, Send } from "lucide-react";
 import { User, DuesRecord, UserRole } from "../types";
-import { api } from "../services/mockData";
+import { api } from "../services/api";
 
 interface DuesProps {
   user: User;
@@ -13,11 +13,10 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    // 회비 목록과 유저 목록을 동시에 호출 (Promise.all)
-    Promise.all([api.getDues(), api.getUsers()]).then(([d, u]) => {
-      setDuesList(d);
-      setUsers(u);
-    });
+    // 회비 기능은 아직 구현되지 않았으므로 빈 배열 사용
+    setDuesList([]);
+    // 유저 목록은 관리자 페이지에서 필요
+    api.getUsers().then(setUsers);
   }, []);
 
   // 필터링: 나의 회비 내역

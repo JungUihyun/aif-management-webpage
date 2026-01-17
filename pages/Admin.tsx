@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { User, UserRole } from "../types";
-import { api } from "../services/mockData";
+import { api } from "../services/api";
 import { getUserRoleLabel } from "../utils/formatters";
 import { Users, AlertTriangle, RefreshCw } from "lucide-react";
 
@@ -23,7 +23,7 @@ const Admin: React.FC = () => {
       )
     ) {
       // 취소 시 UI를 원래대로 되돌리기 위해 다시 로드 (혹은 로컬 state rollback)
-      loadUsers();
+      api.getUsers().then(setUsers);
       return;
     }
 

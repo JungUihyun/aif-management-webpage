@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { MapPin, Clock, Users, ArrowLeft, Shield, Edit2 } from "lucide-react";
 import { Match, MatchStatus, User, UserRole } from "../types";
-import { api } from "../services/mockData";
+import { api } from "../services/api";
 
 interface MatchDetailProps {
   user: User;

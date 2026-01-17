@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { Match, MatchStatus, UserRole } from "../types";
-import { api } from "../services/mockData";
+import { api } from "../services/api";
 import { useAuth } from "../App";
 
 const Schedule: React.FC = () => {

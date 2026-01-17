@@ -1,0 +1,235 @@
+import {
+  User,
+  UserRole,
+  Match,
+  MatchStatus,
+  Notice,
+  UserStats,
+} from "../types";
+import { supabase } from "./supabase";
+import bcrypt from "bcryptjs";
+
+/**
+ * 이 파일은 백엔드 API와 데이터베이스를 처리하는 서비스 레이어입니다.
+ * Supabase와 연동되어 실제 데이터를 가져옵니다.
+ */
+
+// 기본 이미지 경로 반환 헬퍼 함수
+const getDefaultAvatar = (gender: number) => {
+  // 남자 1, 여자 2
+  return gender === 2
+    ? "/images/default_avatar_female.png"
+    : "/images/default_avatar_male.png";
+};
+
+// --- 헬퍼 함수: DB 데이터 -> 앱 데이터 타입 변환 ---
+const mapUserFromDB = (dbUser: any): User => {
+  return {
+    ...dbUser,
+    shortName: dbUser.short_name || dbUser.name,
+    avatarUrl: dbUser.avatar_url || getDefaultAvatar(dbUser.gender),
+    joinedAt: dbUser.joined_at,
+    matches: dbUser.matches || 0,
+    role: dbUser.role as UserRole,
+    backNumber: dbUser.back_number,
+  };
+};
+
+const mapMatchFromDB = (dbMatch: any): Match => {
+  const participants = dbMatch.match_participants
+    ? dbMatch.match_participants.map((p: any) => mapUserFromDB(p.users))
+    : [];
+
+  return {
+    ...dbMatch,
+    time: dbMatch.time ? dbMatch.time.substring(0, 5) : "",
+    participants: participants,
+  };
+};
+
+const mapNoticeFromDB = (dbNotice: any): Notice => {
+  return {
+    ...dbNotice,
+    createdAt: dbNotice.created_at,
+    aurthorId: dbNotice.author_id,
+    isImportant: dbNotice.is_important,
+  };
+};
+
+// --- API 로직 ---
+export const api = {
+  // 로그인
+  login: async (id: string, password?: string): Promise<User | null> => {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    if (password) {
+      const isMatch = await bcrypt.compare(password, data.password);
+      if (!isMatch) return null;
+    }
+
+    return mapUserFromDB(data);
+  },
+
+  // 회원가입
+  signUp: async (
+    user: Omit<User, "matches" | "role" | "avatarUrl" | "joinedAt">
+  ): Promise<boolean> => {
+    // 1. 학번 중복 체크
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (existingUser) {
+      alert("이미 등록된 학번입니다.");
+      return false;
+    }
+
+    // 2. DB Insert
+    const { error } = await supabase.from("users").insert([
+      {
+        id: user.id,
+        password: await bcrypt.hash(user.password!, 10),
+        email: user.email,
+        name: user.name,
+        short_name: user.shortName,
+        birth: user.birth,
+        gender: user.gender,
+        position: user.position,
+        role: UserRole.MEMBER, // 기본 권한은 일반 멤버
+        matches: 0,
+      },
+    ]);
+
+    if (error) {
+      console.error("회원가입 오류:", error);
+      return false;
+    }
+
+    return true;
+  },
+
+  // 경기 목록 조회
+  getMatches: async (): Promise<Match[]> => {
+    const { data, error } = await supabase
+      .from("matches")
+      .select("*, match_participants(users(*))")
+      .order("date", { ascending: true });
+
+    if (error) {
+      console.error("경기 목록 조회 오류:", error);
+      return [];
+    }
+
+    return data ? data.map(mapMatchFromDB) : [];
+  },
+
+  // 경기 상세 조회
+  getMatchById: async (id: string): Promise<Match | undefined> => {
+    const { data, error } = await supabase
+      .from("matches")
+      .select("*, match_participants(users(*))")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error("경기 상세 조회 오류:", error);
+      return undefined;
+    }
+
+    return mapMatchFromDB(data);
+  },
+
+  // 경기 생성
+  createMatch: async (
+    matchData: Omit<Match, "id" | "status" | "participants">
+  ): Promise<Match | null> => {
+    const { data, error } = await supabase
+      .from("matches")
+      .insert([
+        {
+          ...matchData,
+          status: MatchStatus.UPCOMING,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("경기 생성 오류:", error);
+      return null;
+    }
+
+    return mapMatchFromDB(data);
+  },
+
+  // 공지사항 조회
+  getNotices: async (): Promise<Notice[]> => {
+    const { data, error } = await supabase
+      .from("notices")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("공지사항 조회 오류:", error);
+      return [];
+    }
+
+    return data ? data.map(mapNoticeFromDB) : [];
+  },
+
+  // 유저 목록 조회
+  getUsers: async (): Promise<User[]> => {
+    const { data, error } = await supabase.from("users").select("*");
+
+    if (error) {
+      console.error("유저 목록 조회 오류:", error);
+      return [];
+    }
+
+    return data ? data.map(mapUserFromDB) : [];
+  },
+
+  // 유저 권한 수정
+  updateUserRole: async (
+    userId: string,
+    newRole: UserRole
+  ): Promise<boolean> => {
+    const { error } = await supabase
+      .from("users")
+      .update({ role: newRole })
+      .eq("id", userId);
+
+    if (error) {
+      console.error("유저 권한 수정 오류:", error);
+      return false;
+    }
+
+    return true;
+  },
+
+  // 유저 개인 통계 조회 (마이페이지용)
+  getUserStats: async (userId: string): Promise<UserStats> => {
+    // 1. 유저 정보에서 경기 수 가져오기
+    const user = await api.login(userId);
+    const matchesPlayed = user?.matches || 0;
+
+    // 2. 골, 어시스트 등은 아직 DB 테이블이 없으므로 기본값 반환
+    // 추후 'stats' 테이블이 생기면 supabase 로직으로 교체 필요
+    return {
+      matchesPlayed: matchesPlayed,
+      goals: 0,
+      assists: 0,
+      attendanceRate: 0,
+    };
+  },
+};
