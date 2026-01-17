@@ -11,6 +11,7 @@ import Schedule from "./pages/Schedule";
 import MatchDetail from "./pages/MatchDetail";
 import MyPage from "./pages/MyPage";
 import Admin from "./pages/Admin";
+import Notices from "./pages/Notices";
 import { User, UserRole } from "./types";
 import { api } from "./services/api";
 import {
@@ -450,6 +451,7 @@ const AppContent = () => {
           <Route path="/" element={<Dashboard user={user} />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/match/:id" element={<MatchDetail user={user} />} />
+          <Route path="/notices" element={<Notices user={user} />} />
           {/* <Route path="/dues" element={<Dues user={user} />} /> */}
           <Route path="/mypage" element={<MyPage user={user} />} />
           {/* 관리자 페이지는 EXECUTIVE 권한일 떄만 접근 가능 */}

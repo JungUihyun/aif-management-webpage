@@ -208,6 +208,60 @@ export const api = {
     return true;
   },
 
+  // 공지사항 수정
+  updateNotice: async (
+    noticeId: string,
+    noticeData: Partial<Omit<Notice, "id" | "date" | "createdAt" | "authorId">>
+  ): Promise<boolean> => {
+    const updateData: any = {};
+    if (noticeData.title !== undefined) updateData.title = noticeData.title;
+    if (noticeData.content !== undefined) updateData.content = noticeData.content;
+    if (noticeData.isImportant !== undefined) updateData.is_important = noticeData.isImportant;
+
+    const { error } = await supabase
+      .from("notices")
+      .update(updateData)
+      .eq("id", noticeId);
+
+    if (error) {
+      console.error("공지사항 수정 오류:", error);
+      return false;
+    }
+
+    return true;
+  },
+
+  // 공지사항 삭제
+  deleteNotice: async (noticeId: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from("notices")
+      .delete()
+      .eq("id", noticeId);
+
+    if (error) {
+      console.error("공지사항 삭제 오류:", error);
+      return false;
+    }
+
+    return true;
+  },
+
+  // 공지사항 상세 조회
+  getNoticeById: async (noticeId: string): Promise<Notice | null> => {
+    const { data, error } = await supabase
+      .from("notices")
+      .select("*")
+      .eq("id", noticeId)
+      .single();
+
+    if (error) {
+      console.error("공지사항 상세 조회 오류:", error);
+      return null;
+    }
+
+    return mapNoticeFromDB(data);
+  },
+
   // 유저 목록 조회
   getUsers: async (): Promise<User[]> => {
     const { data, error } = await supabase.from("users").select("*");
