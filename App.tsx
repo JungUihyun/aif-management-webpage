@@ -9,7 +9,6 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Schedule from "./pages/Schedule";
 import MatchDetail from "./pages/MatchDetail";
-import Dues from "./pages/Dues";
 import MyPage from "./pages/MyPage";
 import Admin from "./pages/Admin";
 import { User, UserRole } from "./types";
@@ -17,9 +16,6 @@ import { api } from "./services/api";
 import {
   Lock,
   User as UserIcon,
-  Settings,
-  Shield,
-  UserCircle,
   UserPlus,
   ArrowLeft,
 } from "lucide-react";

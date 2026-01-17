@@ -187,6 +187,27 @@ export const api = {
     return data ? data.map(mapNoticeFromDB) : [];
   },
 
+  // 공지사항 작성
+  createNotice: async (
+    noticeData: Omit<Notice, "id" | "date" | "createdAt">
+  ): Promise<boolean> => {
+    const { error } = await supabase.from("notices").insert([
+      {
+        title: noticeData.title,
+        content: noticeData.content,
+        author_id: noticeData.authorId,
+        is_important: noticeData.isImportant,
+      },
+    ]);
+
+    if (error) {
+      console.error("공지사항 작성 오류:", error);
+      return false;
+    }
+
+    return true;
+  },
+
   // 유저 목록 조회
   getUsers: async (): Promise<User[]> => {
     const { data, error } = await supabase.from("users").select("*");

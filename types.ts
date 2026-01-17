@@ -57,8 +57,9 @@ export interface Notice {
   title: string;
   content: string;
   date: string;
+  createdAt?: string; // 생성일시
   authorId: string; // 작성자 ID
-  isImportant: boolean; // 중요 공지 여부 (상단 고정 또는 강조용)
+  isImportant: number; // 중요 공지 여부 (0: 일반, 1: 중요)
 }
 
 // 회비 납부 기록 인터페이스
