@@ -34,6 +34,11 @@ export const authService = {
     if (authError) throw authError;
 
     // 2. public.users 테이블에 추가 정보 저장
+    const defaultAvatar =
+      userData.gender === 2
+        ? '/images/default_avatar_female.png'
+        : '/images/default_avatar_male.png';
+
     const { error: dbError } = await supabase.from('users').insert({
       id: studentId,
       auth_user_id: authData.user!.id,
@@ -46,6 +51,7 @@ export const authService = {
       back_number: userData.backNumber,
       role: 'MEMBER',
       matches: 0,
+      avatar_url: defaultAvatar,
     });
 
     if (dbError) {
