@@ -58,8 +58,8 @@ const mapNoticeFromDB = (dbNotice: any): Notice => {
 
 // --- API 로직 ---
 export const api = {
-  // 로그인
-  login: async (id: string, password?: string): Promise<User | null> => {
+  // 레거시 로그인 (기존 사용자용 - auth_user_id가 null인 경우)
+  legacyLogin: async (id: string, password: string): Promise<User | null> => {
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -70,54 +70,12 @@ export const api = {
       return null;
     }
 
-    if (password) {
-      const isMatch = await bcrypt.compare(password, data.password);
-      if (!isMatch) return null;
-    }
+    // 비밀번호 검증
+    const isMatch = await bcrypt.compare(password, data.password);
+    if (!isMatch) return null;
 
     return mapUserFromDB(data);
   },
-
-  // 회원가입
-  signUp: async (
-    user: Omit<User, 'matches' | 'role' | 'avatarUrl' | 'joinedAt'>
-  ): Promise<boolean> => {
-    // 1. 학번 중복 체크
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if (existingUser) {
-      alert('이미 등록된 학번입니다.');
-      return false;
-    }
-
-    // 2. DB Insert
-    const { error } = await supabase.from('users').insert([
-      {
-        id: user.id,
-        password: await bcrypt.hash(user.password!, 10),
-        email: user.email,
-        name: user.name,
-        short_name: user.shortName,
-        birth: user.birth,
-        gender: user.gender,
-        position: user.position,
-        role: UserRole.MEMBER, // 기본 권한은 일반 멤버
-        matches: 0,
-      },
-    ]);
-
-    if (error) {
-      console.error('회원가입 오류:', error);
-      return false;
-    }
-
-    return true;
-  },
-
   // 경기 목록 조회
   getMatches: async (): Promise<Match[]> => {
     const { data, error } = await supabase
@@ -297,7 +255,7 @@ export const api = {
   // 유저 개인 통계 조회 (마이페이지용)
   getUserStats: async (userId: string): Promise<UserStats> => {
     // 1. 유저 정보에서 경기 수 가져오기
-    const user = await api.login(userId);
+    const user = await api.legacyLogin(userId, '');
     const matchesPlayed = user?.matches || 0;
 
     // 2. 골, 어시스트 등은 아직 DB 테이블이 없으므로 기본값 반환

@@ -13,14 +13,22 @@ import MyPage from './pages/MyPage';
 import Admin from './pages/Admin';
 import Notices from './pages/Notices';
 import { User, UserRole } from './types';
-import { api, emailVerificationApi } from './services/api';
-import { Lock, User as UserIcon, UserPlus, ArrowLeft, Mail } from 'lucide-react';
+import { emailVerificationApi } from './services/api';
+import { authService } from './services/auth';
+import { supabase } from './services/supabase';
+import {
+  Lock,
+  User as UserIcon,
+  UserPlus,
+  ArrowLeft,
+  Mail,
+} from 'lucide-react';
 
 // --- Auth Context (전역 인증 상태 관리) ---
 interface AuthContextType {
   user: User | null;
   login: (id: string, password?: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUserRole: (role: UserRole) => void;
   isLoading: boolean;
 }
@@ -38,23 +46,126 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // 앱 초기 로딩 시뮬레이션
-    setIsLoading(false);
+    let subscriptionRef: { unsubscribe: () => void } | null = null;
+
+    // JWT 세션 자동 복구 (새로고침 시)
+    const initAuth = async () => {
+      try {
+        const session = await authService.getSession();
+
+        if (session?.user) {
+          // session.user를 직접 사용 (순환 의존성 방지)
+          const { data: userData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('auth_user_id', session.user.id)
+            .single();
+
+          if (userData) {
+            setUser({
+              id: userData.id,
+              email: userData.email,
+              name: userData.name,
+              shortName: userData.short_name,
+              birth: userData.birth,
+              gender: userData.gender,
+              position: userData.position,
+              backNumber: userData.back_number,
+              role: userData.role,
+              matches: userData.matches,
+              avatarUrl: userData.avatar_url,
+              joinedAt: userData.joined_at,
+              password: '',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('[Auth] 세션 복구 오류:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // 먼저 세션 복구 완료 후 리스너 등록
+    initAuth().then(() => {
+      // 세션 변경 감지 (INITIAL_SESSION 무시)
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        // INITIAL_SESSION은 무시 (initAuth에서 이미 처리됨)
+        if (event === 'INITIAL_SESSION') {
+          return;
+        }
+
+        try {
+          if (session) {
+            const userData = await authService.getCurrentUser();
+            setUser(userData);
+          } else {
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('[Auth] 인증 상태 변경 오류:', error);
+          setUser(null);
+        }
+      });
+
+      subscriptionRef = subscription;
+    });
+
+    return () => {
+      subscriptionRef?.unsubscribe();
+    };
   }, []);
 
   const login = async (id: string, password?: string) => {
     setIsLoading(true);
-    const u = await api.login(id, password);
-    if (u) {
-      setUser(u);
+    try {
+      const authUser = await authService.signIn(id, password!);
+
+      // JWT 사용자인지 레거시 사용자인지 확인
+      if (authUser && 'aud' in authUser) {
+        // JWT 사용자
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+      } else {
+        // 레거시 사용자: DB에서 직접 조회
+        const { data } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (data) {
+          setUser({
+            id: data.id,
+            email: data.email || '',
+            name: data.name,
+            shortName: data.short_name,
+            birth: data.birth,
+            gender: data.gender,
+            position: data.position,
+            backNumber: data.back_number,
+            role: data.role,
+            matches: data.matches,
+            avatarUrl: data.avatar_url,
+            joinedAt: data.joined_at,
+            password: '',
+          });
+        }
+      }
+
       setIsLoading(false);
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      setIsLoading(false);
+      return false;
     }
-    setIsLoading(false);
-    return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await authService.signOut();
     setUser(null);
   };
 
@@ -90,7 +201,6 @@ const LoginPage = () => {
   );
   const [verificationEmail, setVerificationEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [remainingTime, setRemainingTime] = useState(600); // 10분 = 600초
 
   // 회원가입 폼 상태
@@ -145,9 +255,8 @@ const LoginPage = () => {
     setError('');
     setIsSubmitting(true);
 
-    const result = await emailVerificationApi.sendVerificationCode(
-      verificationEmail
-    );
+    const result =
+      await emailVerificationApi.sendVerificationCode(verificationEmail);
 
     if (!result.success) {
       setError(result.error || '인증 코드 발송에 실패했습니다.');
@@ -155,7 +264,6 @@ const LoginPage = () => {
       return;
     }
 
-    setExpiresAt(result.expiresAt!);
     setSignUpStep('code');
     startTimer(10 * 60); // 10분 타이머 시작
     setIsSubmitting(false);
@@ -188,11 +296,11 @@ const LoginPage = () => {
     setIsSubmitting(false);
   };
 
-  // 재전송 핸들러
   const handleResendCode = async () => {
     setVerificationCode('');
     setError('');
-    await handleEmailSubmit(new Event('submit') as any);
+    const event = new Event('submit', { bubbles: true, cancelable: true });
+    await handleEmailSubmit(event as unknown as React.FormEvent);
   };
 
   // 회원가입 폼 변경 핸들러
@@ -221,10 +329,9 @@ const LoginPage = () => {
     setIsSubmitting(true);
 
     try {
-      const success = await api.signUp({
+      await authService.signUp(signUpData.id, signUpData.password, {
         id: signUpData.id,
-        password: signUpData.password,
-        email: verificationEmail, // 인증된 이메일 사용
+        email: verificationEmail,
         name: signUpData.name,
         shortName: signUpData.shortName || signUpData.name,
         birth: parseInt(signUpData.birth),
@@ -233,16 +340,15 @@ const LoginPage = () => {
         backNumber: signUpData.backNumber
           ? parseInt(signUpData.backNumber)
           : undefined,
+        password: signUpData.password, // Required by User type
       });
 
-      if (success) {
-        alert('회원가입이 완료되었습니다! 로그인해주세요.');
-        setIsLoginView(true); // 로그인 화면으로 전환
-        setSignUpStep('email'); // 초기화
-        setId(signUpData.id);
-        setPassword('');
-      }
-    } catch (e) {
+      alert('회원가입이 완료되었습니다! 로그인해주세요.');
+      setIsLoginView(true);
+      setSignUpStep('email');
+      setId(signUpData.id);
+      setPassword('');
+    } catch {
       setError('회원가입 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
