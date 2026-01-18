@@ -13,8 +13,8 @@ import MyPage from './pages/MyPage';
 import Admin from './pages/Admin';
 import Notices from './pages/Notices';
 import { User, UserRole } from './types';
-import { api } from './services/api';
-import { Lock, User as UserIcon, UserPlus, ArrowLeft } from 'lucide-react';
+import { api, emailVerificationApi } from './services/api';
+import { Lock, User as UserIcon, UserPlus, ArrowLeft, Mail } from 'lucide-react';
 
 // --- Auth Context (전역 인증 상태 관리) ---
 interface AuthContextType {
@@ -84,6 +84,15 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // 회원가입 3단계 상태
+  const [signUpStep, setSignUpStep] = useState<'email' | 'code' | 'form'>(
+    'email'
+  );
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [remainingTime, setRemainingTime] = useState(600); // 10분 = 600초
+
   // 회원가입 폼 상태
   const [signUpData, setSignUpData] = useState({
     id: '',
@@ -94,8 +103,31 @@ const LoginPage = () => {
     birth: '',
     gender: 1,
     position: 'MF',
+    backNumber: '',
   });
 
+  // 타이머 시작
+  const startTimer = (seconds: number) => {
+    setRemainingTime(seconds);
+    const interval = setInterval(() => {
+      setRemainingTime((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  // 시간 포맷팅 (MM:SS)
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // 로그인 핸들러
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -107,6 +139,63 @@ const LoginPage = () => {
     setIsSubmitting(false);
   };
 
+  // Step 1: 이메일 제출 핸들러
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+
+    const result = await emailVerificationApi.sendVerificationCode(
+      verificationEmail
+    );
+
+    if (!result.success) {
+      setError(result.error || '인증 코드 발송에 실패했습니다.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    setExpiresAt(result.expiresAt!);
+    setSignUpStep('code');
+    startTimer(10 * 60); // 10분 타이머 시작
+    setIsSubmitting(false);
+  };
+
+  // Step 2: 코드 검증 핸들러
+  const handleCodeVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+
+    const result = await emailVerificationApi.verifyCode(
+      verificationEmail,
+      verificationCode
+    );
+
+    if (!result.success) {
+      setError(result.error || '인증에 실패했습니다.');
+      await emailVerificationApi.incrementAttempts(
+        verificationEmail,
+        verificationCode
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    // 인증 성공 → 회원가입 폼으로 이동
+    setSignUpStep('form');
+    setError('');
+    setIsSubmitting(false);
+  };
+
+  // 재전송 핸들러
+  const handleResendCode = async () => {
+    setVerificationCode('');
+    setError('');
+    await handleEmailSubmit(new Event('submit') as any);
+  };
+
+  // 회원가입 폼 변경 핸들러
   const handleSignUpChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -114,6 +203,7 @@ const LoginPage = () => {
     setSignUpData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Step 3: 회원가입 제출 핸들러
   const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -134,18 +224,21 @@ const LoginPage = () => {
       const success = await api.signUp({
         id: signUpData.id,
         password: signUpData.password,
-        email: `${signUpData.id}@aif.internal`, // 학번을 이용한 이메일 생성
+        email: verificationEmail, // 인증된 이메일 사용
         name: signUpData.name,
-        shortName: signUpData.shortName || signUpData.name, // 별명 없으면 이름 사용
+        shortName: signUpData.shortName || signUpData.name,
         birth: parseInt(signUpData.birth),
         gender: Number(signUpData.gender),
         position: signUpData.position,
+        backNumber: signUpData.backNumber
+          ? parseInt(signUpData.backNumber)
+          : undefined,
       });
 
       if (success) {
         alert('회원가입이 완료되었습니다! 로그인해주세요.');
         setIsLoginView(true); // 로그인 화면으로 전환
-        // 아이디 필드 미리 채워주기
+        setSignUpStep('email'); // 초기화
         setId(signUpData.id);
         setPassword('');
       }
@@ -156,9 +249,14 @@ const LoginPage = () => {
     }
   };
 
-  // 뷰 전환 시 에러 메시지 초기화
+  // 뷰 전환 시 초기화
   useEffect(() => {
     setError('');
+    if (isLoginView) {
+      setSignUpStep('email');
+      setVerificationEmail('');
+      setVerificationCode('');
+    }
   }, [isLoginView]);
 
   return (
@@ -253,166 +351,305 @@ const LoginPage = () => {
             </div>
           </form>
         ) : (
-          /* 회원가입 폼 */
-          <form onSubmit={handleSignUpSubmit} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  이름
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={signUpData.name}
-                  onChange={handleSignUpChange}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
-                  placeholder="본명"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  학번
-                </label>
-                <input
-                  type="text"
-                  name="id"
-                  value={signUpData.id}
-                  onChange={handleSignUpChange}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
-                  placeholder="2024..."
-                  required
-                />
-              </div>
-            </div>
+          /* 회원가입 3단계 폼 */
+          <>
+            {/* Step 1: 이메일 인증 */}
+            {signUpStep === 'email' && (
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <h2 className="text-xl font-bold text-gray-800 text-center">
+                  이메일 인증
+                </h2>
+                <p className="text-sm text-gray-600 text-center">
+                  본인 확인을 위해 이메일 인증이 필요합니다.
+                </p>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                별명 (유니폼 마킹용)
-              </label>
-              <input
-                type="text"
-                name="shortName"
-                value={signUpData.shortName}
-                onChange={handleSignUpChange}
-                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
-                placeholder="예: SHINYUNG (미입력시 본명)"
-              />
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    이메일
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      type="email"
+                      value={verificationEmail}
+                      onChange={(e) => setVerificationEmail(e.target.value)}
+                      className="pl-10 w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
+                      placeholder="example@gmail.com"
+                      required
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
-                비밀번호
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={signUpData.password}
-                onChange={handleSignUpChange}
-                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
-                placeholder="비밀번호 입력"
-                required
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                name="passwordConfirm"
-                value={signUpData.passwordConfirm}
-                onChange={handleSignUpChange}
-                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
-                placeholder="비밀번호 확인"
-                required
-              />
-            </div>
+                {error && (
+                  <div className="text-red-500 text-xs text-center bg-red-50 p-2 rounded">
+                    {error}
+                  </div>
+                )}
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  생년월일 (8자리)
-                </label>
-                <input
-                  type="text"
-                  name="birth"
-                  value={signUpData.birth}
-                  onChange={handleSignUpChange}
-                  maxLength={8}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
-                  placeholder="20040101"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  성별
-                </label>
-                <select
-                  name="gender"
-                  value={signUpData.gender}
-                  onChange={handleSignUpChange}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-green-800 transition-colors disabled:opacity-50"
                 >
-                  <option value={1}>남성</option>
-                  <option value={2}>여성</option>
-                </select>
-              </div>
-            </div>
+                  {isSubmitting ? '전송 중...' : '인증 코드 받기'}
+                </button>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  등번호
-                </label>
-                <input
-                  type="text"
-                  name="backNumber"
-                  value={signUpData.backNumber || ''}
-                  onChange={handleSignUpChange}
-                  maxLength={2}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
-                  placeholder="10"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  주 포지션
-                </label>
-                <select
-                  name="position"
-                  value={signUpData.position}
-                  onChange={handleSignUpChange}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                <button
+                  type="button"
+                  onClick={() => setIsLoginView(true)}
+                  className="w-full text-gray-500 text-sm py-2 hover:text-gray-800"
                 >
-                  <option value="FW">FW (공격수)</option>
-                  <option value="MF">MF (미드필더)</option>
-                  <option value="DF">DF (수비수)</option>
-                  <option value="GK">GK (골키퍼)</option>
-                </select>
-              </div>
-            </div>
-
-            {error && (
-              <div className="text-red-500 text-xs text-center font-medium bg-red-50 p-2 rounded">
-                {error}
-              </div>
+                  로그인으로 돌아가기
+                </button>
+              </form>
             )}
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow-md mt-2 disabled:opacity-50"
-            >
-              {isSubmitting ? '가입 처리 중...' : '가입 완료'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsLoginView(true)}
-              className="w-full text-gray-500 text-xs py-2 hover:text-gray-800"
-            >
-              취소하고 로그인으로 돌아가기
-            </button>
-          </form>
+            {/* Step 2: 코드 인증 */}
+            {signUpStep === 'code' && (
+              <form onSubmit={handleCodeVerify} className="space-y-4">
+                <h2 className="text-xl font-bold text-gray-800 text-center">
+                  인증 코드 입력
+                </h2>
+                <p className="text-sm text-gray-600 text-center">
+                  <strong>{verificationEmail}</strong>로
+                  <br />
+                  전송된 6자리 코드를 입력해주세요.
+                </p>
+
+                {/* 타이머 */}
+                <div className="text-center">
+                  <span className="text-sm text-gray-500">남은 시간: </span>
+                  <span
+                    className={`text-lg font-bold ${
+                      remainingTime < 60 ? 'text-red-500' : 'text-primary'
+                    }`}
+                  >
+                    {formatTime(remainingTime)}
+                  </span>
+                </div>
+
+                <div>
+                  <input
+                    type="text"
+                    value={verificationCode}
+                    onChange={(e) =>
+                      setVerificationCode(
+                        e.target.value.replace(/\D/g, '').slice(0, 6)
+                      )
+                    }
+                    className="w-full border-2 border-gray-300 rounded-lg p-4 text-center text-3xl font-bold tracking-widest focus:ring-2 focus:ring-primary focus:border-primary"
+                    placeholder="000000"
+                    maxLength={6}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                {error && (
+                  <div className="text-red-500 text-xs text-center bg-red-50 p-2 rounded">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting || verificationCode.length !== 6}
+                  className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-green-800 transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? '확인 중...' : '인증하기'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={remainingTime > 540}
+                  className="w-full text-primary text-sm py-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  인증 코드 재전송
+                  {remainingTime > 540 && ` (${540 - remainingTime}초 후)`}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSignUpStep('email')}
+                  className="w-full text-gray-500 text-sm py-2 hover:text-gray-800"
+                >
+                  이메일 변경
+                </button>
+              </form>
+            )}
+
+            {/* Step 3: 회원가입 폼 */}
+            {signUpStep === 'form' && (
+              <form onSubmit={handleSignUpSubmit} className="space-y-3">
+                <div className="text-center mb-4 bg-green-50 p-3 rounded-lg">
+                  <p className="text-xs text-green-700">
+                    ✓ 이메일 인증 완료: {verificationEmail}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      이름
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={signUpData.name}
+                      onChange={handleSignUpChange}
+                      className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                      placeholder="본명"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      학번
+                    </label>
+                    <input
+                      type="text"
+                      name="id"
+                      value={signUpData.id}
+                      onChange={handleSignUpChange}
+                      className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                      placeholder="2024..."
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    별명 (유니폼 마킹용)
+                  </label>
+                  <input
+                    type="text"
+                    name="shortName"
+                    value={signUpData.shortName}
+                    onChange={handleSignUpChange}
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                    placeholder="예: SHINYUNG (미입력시 본명)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    비밀번호
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={signUpData.password}
+                    onChange={handleSignUpChange}
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                    placeholder="비밀번호 입력"
+                    required
+                  />
+                </div>
+                <div>
+                  <input
+                    type="password"
+                    name="passwordConfirm"
+                    value={signUpData.passwordConfirm}
+                    onChange={handleSignUpChange}
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                    placeholder="비밀번호 확인"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      생년월일 (8자리)
+                    </label>
+                    <input
+                      type="text"
+                      name="birth"
+                      value={signUpData.birth}
+                      onChange={handleSignUpChange}
+                      maxLength={8}
+                      className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                      placeholder="20040101"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      성별
+                    </label>
+                    <select
+                      name="gender"
+                      value={signUpData.gender}
+                      onChange={handleSignUpChange}
+                      className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                    >
+                      <option value={1}>남성</option>
+                      <option value={2}>여성</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      등번호
+                    </label>
+                    <input
+                      type="text"
+                      name="backNumber"
+                      value={signUpData.backNumber || ''}
+                      onChange={handleSignUpChange}
+                      maxLength={2}
+                      className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                      placeholder="10"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      주 포지션
+                    </label>
+                    <select
+                      name="position"
+                      value={signUpData.position}
+                      onChange={handleSignUpChange}
+                      className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
+                    >
+                      <option value="FW">FW (공격수)</option>
+                      <option value="MF">MF (미드필더)</option>
+                      <option value="DF">DF (수비수)</option>
+                      <option value="GK">GK (골키퍼)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="text-red-500 text-xs text-center font-medium bg-red-50 p-2 rounded">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow-md mt-2 disabled:opacity-50"
+                >
+                  {isSubmitting ? '가입 처리 중...' : '가입 완료'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsLoginView(true)}
+                  className="w-full text-gray-500 text-xs py-2 hover:text-gray-800"
+                >
+                  취소하고 로그인으로 돌아가기
+                </button>
+              </form>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -310,3 +310,99 @@ export const api = {
     };
   },
 };
+
+// --- 이메일 인증 API ---
+export const emailVerificationApi = {
+  // 1. 인증 코드 발송
+  sendVerificationCode: async (
+    email: string
+  ): Promise<{ success: boolean; expiresAt?: string; error?: string }> => {
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'send-verification-code',
+        {
+          body: { email },
+        }
+      );
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data.error) {
+        return { success: false, error: data.error };
+      }
+
+      return { success: true, expiresAt: data.expiresAt };
+    } catch (error) {
+      console.error('인증 코드 발송 오류:', error);
+      return { success: false, error: '인증 코드 발송에 실패했습니다.' };
+    }
+  },
+
+  // 2. 인증 코드 검증
+  verifyCode: async (
+    email: string,
+    code: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      // DB에서 최신 인증 코드 조회
+      const { data, error } = await supabase
+        .from('email_verifications')
+        .select('*')
+        .eq('email', email)
+        .eq('code', code)
+        .eq('verified', false)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('코드 검증 오류:', error);
+        return {
+          success: false,
+          error: '인증 코드 확인 중 오류가 발생했습니다.',
+        };
+      }
+
+      if (!data) {
+        return {
+          success: false,
+          error: '인증 코드가 올바르지 않거나 만료되었습니다.',
+        };
+      }
+
+      // 시도 횟수 제한 체크 (5회)
+      if (data.attempts >= 5) {
+        return {
+          success: false,
+          error: '인증 시도 횟수를 초과했습니다. 새로운 코드를 요청해주세요.',
+        };
+      }
+
+      // 인증 성공: verified = true로 업데이트
+      await supabase
+        .from('email_verifications')
+        .update({ verified: true })
+        .eq('id', data.id);
+
+      return { success: true };
+    } catch (error) {
+      console.error('코드 검증 오류:', error);
+      return { success: false, error: '인증 코드 확인에 실패했습니다.' };
+    }
+  },
+
+  // 3. 인증 시도 횟수 증가
+  incrementAttempts: async (email: string, code: string): Promise<void> => {
+    try {
+      await supabase.rpc('increment_verification_attempts', {
+        p_email: email,
+        p_code: code,
+      });
+    } catch (error) {
+      console.error('시도 횟수 증가 오류:', error);
+    }
+  },
+};
