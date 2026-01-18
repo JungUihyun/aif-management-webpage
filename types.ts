@@ -1,16 +1,16 @@
 // 유저 권한 레벨 정의
 // MEMBER: 일반 부원, MANAGER: 매니저(일정 관리 등), EXECUTIVE: 임원(회비, 권한 관리 등)
 export enum UserRole {
-  MEMBER = "MEMBER",
-  MANAGER = "MANAGER",
-  EXECUTIVE = "EXECUTIVE",
+  MEMBER = 'MEMBER',
+  MANAGER = 'MANAGER',
+  EXECUTIVE = 'EXECUTIVE',
 }
 
 // 경기 상태 정의
 export enum MatchStatus {
-  UPCOMING = "UPCOMING", // 예정
-  COMPLETED = "COMPLETED", // 종료
-  CANCELLED = "CANCELLED", // 취소
+  UPCOMING = 'UPCOMING', // 예정
+  COMPLETED = 'COMPLETED', // 종료
+  CANCELLED = 'CANCELLED', // 취소
 }
 
 // 사용자 정보 인터페이스
@@ -68,7 +68,7 @@ export interface DuesRecord {
   userId: string;
   month: string; // 해당 월 (예: "2023-10")
   amount: number; // 납부 금액
-  status: "PAID" | "UNPAID"; // 납부 상태
+  status: 'PAID' | 'UNPAID'; // 납부 상태
   paidDate?: string; // 실 납부일
 }
 

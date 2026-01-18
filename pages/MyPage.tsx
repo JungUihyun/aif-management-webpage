@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { User, UserStats } from "../types";
-import { api } from "../services/api";
-import { getUserRoleLabel } from "../utils/formatters";
+import React, { useEffect, useState } from 'react';
+import { User, UserStats } from '../types';
+import { api } from '../services/api';
+import { getUserRoleLabel } from '../utils/formatters';
 import {
   BarChart,
   Bar,
@@ -13,8 +13,8 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts";
-import { Trophy, Activity, Calendar } from "lucide-react";
+} from 'recharts';
+import { Trophy, Activity, Calendar } from 'lucide-react';
 
 interface MyPageProps {
   user: User;
@@ -31,21 +31,21 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
   // 막대 그래프용 데이터 포맷팅 (경기/골/어시)
   const chartData = stats
     ? [
-        { name: "경기", value: user.matches || stats.matchesPlayed },
-        { name: "골", value: stats.goals },
-        { name: "어시", value: stats.assists },
+        { name: '경기', value: user.matches || stats.matchesPlayed },
+        { name: '골', value: stats.goals },
+        { name: '어시', value: stats.assists },
       ]
     : [];
 
   // 도넛 차트(출석률)용 데이터 포맷팅
   const donutData = stats
     ? [
-        { name: "attended", value: stats.attendanceRate },
-        { name: "missed", value: 100 - stats.attendanceRate },
+        { name: 'attended', value: stats.attendanceRate },
+        { name: 'missed', value: 100 - stats.attendanceRate },
       ]
     : [];
 
-  const COLORS = ["#036b3f", "#e5e7eb"]; // 도넛 차트 색상 (메인색, 회색)
+  const COLORS = ['#036b3f', '#e5e7eb']; // 도넛 차트 색상 (메인색, 회색)
 
   return (
     <div className="space-y-6">
@@ -78,11 +78,11 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                 </h1>
                 <span
                   className={`px-2 py-0.5 rounded text-xs font-bold ${
-                    user.role === "EXECUTIVE"
-                      ? "bg-purple-100 text-purple-800"
-                      : user.role === "MANAGER"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-green-100 text-green-800"
+                    user.role === 'EXECUTIVE'
+                      ? 'bg-purple-100 text-purple-800'
+                      : user.role === 'MANAGER'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-green-100 text-green-800'
                   }`}
                 >
                   {getUserRoleLabel(user.role)}
@@ -147,16 +147,16 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#6b7280", fontSize: 12 }}
+                  tick={{ fill: '#6b7280', fontSize: 12 }}
                   dy={10}
                 />
                 <YAxis hide />
                 <Tooltip
-                  cursor={{ fill: "#f0fdf4" }}
+                  cursor={{ fill: '#f0fdf4' }}
                   contentStyle={{
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    borderRadius: '8px',
+                    border: 'none',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                   }}
                 />
                 <Bar

@@ -1,25 +1,20 @@
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import {
   HashRouter as Router,
   Routes,
   Route,
   Navigate,
-} from "react-router-dom";
-import Layout from "./components/Layout";
-import Dashboard from "./pages/Dashboard";
-import Schedule from "./pages/Schedule";
-import MatchDetail from "./pages/MatchDetail";
-import MyPage from "./pages/MyPage";
-import Admin from "./pages/Admin";
-import Notices from "./pages/Notices";
-import { User, UserRole } from "./types";
-import { api } from "./services/api";
-import {
-  Lock,
-  User as UserIcon,
-  UserPlus,
-  ArrowLeft,
-} from "lucide-react";
+} from 'react-router-dom';
+import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
+import Schedule from './pages/Schedule';
+import MatchDetail from './pages/MatchDetail';
+import MyPage from './pages/MyPage';
+import Admin from './pages/Admin';
+import Notices from './pages/Notices';
+import { User, UserRole } from './types';
+import { api } from './services/api';
+import { Lock, User as UserIcon, UserPlus, ArrowLeft } from 'lucide-react';
 
 // --- Auth Context (전역 인증 상태 관리) ---
 interface AuthContextType {
@@ -84,30 +79,30 @@ const LoginPage = () => {
   const [isLoginView, setIsLoginView] = useState(true); // true: 로그인 화면, false: 회원가입 화면
 
   // 로그인 폼 상태
-  const [id, setId] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [id, setId] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 회원가입 폼 상태
   const [signUpData, setSignUpData] = useState({
-    id: "",
-    password: "",
-    passwordConfirm: "",
-    name: "",
-    shortName: "",
-    birth: "",
+    id: '',
+    password: '',
+    passwordConfirm: '',
+    name: '',
+    shortName: '',
+    birth: '',
     gender: 1,
-    position: "MF",
+    position: 'MF',
   });
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setIsSubmitting(true);
     const success = await login(id, password);
     if (!success) {
-      setError("학번 또는 비밀번호가 올바르지 않습니다.");
+      setError('학번 또는 비밀번호가 올바르지 않습니다.');
     }
     setIsSubmitting(false);
   };
@@ -121,15 +116,15 @@ const LoginPage = () => {
 
   const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     // 유효성 검사
     if (signUpData.password !== signUpData.passwordConfirm) {
-      setError("비밀번호가 일치하지 않습니다.");
+      setError('비밀번호가 일치하지 않습니다.');
       return;
     }
     if (signUpData.birth.length !== 8) {
-      setError("생년월일은 8자리로 입력해주세요. (예: 20040101)");
+      setError('생년월일은 8자리로 입력해주세요. (예: 20040101)');
       return;
     }
 
@@ -148,14 +143,14 @@ const LoginPage = () => {
       });
 
       if (success) {
-        alert("회원가입이 완료되었습니다! 로그인해주세요.");
+        alert('회원가입이 완료되었습니다! 로그인해주세요.');
         setIsLoginView(true); // 로그인 화면으로 전환
         // 아이디 필드 미리 채워주기
         setId(signUpData.id);
-        setPassword("");
+        setPassword('');
       }
     } catch (e) {
-      setError("회원가입 중 오류가 발생했습니다.");
+      setError('회원가입 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -163,7 +158,7 @@ const LoginPage = () => {
 
   // 뷰 전환 시 에러 메시지 초기화
   useEffect(() => {
-    setError("");
+    setError('');
   }, [isLoginView]);
 
   return (
@@ -183,12 +178,12 @@ const LoginPage = () => {
             <div className="text-5xl">⚽</div>
           </div>
           <h1 className="text-2xl font-bold text-gray-800">
-            {isLoginView ? "FC AIF" : "회원가입"}
+            {isLoginView ? 'FC AIF' : '회원가입'}
           </h1>
           <p className="text-gray-500 text-sm mt-1">
             {isLoginView
-              ? "부원 관리를 위한 통합 플랫폼"
-              : "새로운 부원이 되어주세요!"}
+              ? '부원 관리를 위한 통합 플랫폼'
+              : '새로운 부원이 되어주세요!'}
           </p>
         </div>
 
@@ -243,7 +238,7 @@ const LoginPage = () => {
               disabled={isSubmitting}
               className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow-md disabled:opacity-50"
             >
-              {isSubmitting ? "로그인 중..." : "로그인"}
+              {isSubmitting ? '로그인 중...' : '로그인'}
             </button>
 
             <div className="mt-4 pt-4 border-t border-gray-100 text-center">
@@ -371,7 +366,7 @@ const LoginPage = () => {
                 <input
                   type="text"
                   name="backNumber"
-                  value={signUpData.backNumber || ""}
+                  value={signUpData.backNumber || ''}
                   onChange={handleSignUpChange}
                   maxLength={2}
                   className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-primary outline-none"
@@ -408,7 +403,7 @@ const LoginPage = () => {
               disabled={isSubmitting}
               className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow-md mt-2 disabled:opacity-50"
             >
-              {isSubmitting ? "가입 처리 중..." : "가입 완료"}
+              {isSubmitting ? '가입 처리 중...' : '가입 완료'}
             </button>
             <button
               type="button"
@@ -458,7 +453,7 @@ const AppContent = () => {
           <Route
             path="/admin"
             element={
-              user.role === "EXECUTIVE" ? <Admin /> : <Navigate to="/" />
+              user.role === 'EXECUTIVE' ? <Admin /> : <Navigate to="/" />
             }
           />
         </Routes>

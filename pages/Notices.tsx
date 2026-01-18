@@ -1,8 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Bell, X, AlertTriangle, Plus, Save, Edit2, Trash2 } from "lucide-react";
-import { Notice, User, UserRole } from "../types";
-import { api } from "../services/api";
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  Bell,
+  X,
+  AlertTriangle,
+  Plus,
+  Save,
+  Edit2,
+  Trash2,
+} from 'lucide-react';
+import { Notice, User, UserRole } from '../types';
+import { api } from '../services/api';
 
 interface NoticesProps {
   user: User;
@@ -21,8 +29,8 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
 
   // 작성/수정 폼 상태
   const [formData, setFormData] = useState({
-    title: "",
-    content: "",
+    title: '',
+    content: '',
     isImportant: 0,
   });
 
@@ -35,13 +43,13 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
   useEffect(() => {
     const initializeNotices = async () => {
       const loadedNotices = await loadNotices();
-      
+
       // URL 파라미터에서 openId 확인
       const params = new URLSearchParams(location.search);
       const openId = params.get('openId');
-      
+
       if (openId && loadedNotices) {
-        const notice = loadedNotices.find(n => n.id === openId);
+        const notice = loadedNotices.find((n) => n.id === openId);
         if (notice) {
           viewNotice(notice);
           // URL에서 openId 파라미터 제거 (깔끔한 URL 유지)
@@ -49,13 +57,13 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
         }
       }
     };
-    
+
     initializeNotices();
   }, []);
 
   // 공지사항 작성 모달 열기
   const openCreateModal = () => {
-    setFormData({ title: "", content: "", isImportant: 0 });
+    setFormData({ title: '', content: '', isImportant: 0 });
     setSelectedNotice(null);
     setIsEditMode(true);
   };
@@ -100,7 +108,7 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
         });
 
         if (success) {
-          alert("공지사항이 수정되었습니다!");
+          alert('공지사항이 수정되었습니다!');
           // 수정된 데이터로 상세보기 모달 업데이트
           const updatedNotice = await api.getNoticeById(selectedNotice.id);
           if (updatedNotice) {
@@ -119,18 +127,18 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
         });
 
         if (success) {
-          alert("공지사항이 작성되었습니다!");
+          alert('공지사항이 작성되었습니다!');
           setIsEditMode(false);
           await loadNotices();
         }
       }
 
       if (!success) {
-        alert(`공지사항 ${selectedNotice ? "수정" : "작성"}에 실패했습니다.`);
+        alert(`공지사항 ${selectedNotice ? '수정' : '작성'}에 실패했습니다.`);
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다.");
+      alert('오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
     }
@@ -143,13 +151,13 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
     const success = await api.deleteNotice(noticeToDelete.id);
 
     if (success) {
-      alert("공지사항이 삭제되었습니다.");
+      alert('공지사항이 삭제되었습니다.');
       setIsDeleteModalOpen(false);
       setNoticeToDelete(null);
       setSelectedNotice(null);
       await loadNotices();
     } else {
-      alert("공지사항 삭제에 실패했습니다.");
+      alert('공지사항 삭제에 실패했습니다.');
     }
     setIsDeleting(false);
   };
@@ -237,7 +245,7 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
               <div className="flex-1">
                 {isEditMode ? (
                   <h2 className="text-2xl font-bold text-gray-800">
-                    {selectedNotice ? "공지사항 수정" : "공지사항 작성"}
+                    {selectedNotice ? '공지사항 수정' : '공지사항 작성'}
                   </h2>
                 ) : (
                   <div>
@@ -318,7 +326,10 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
                       }
                       className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                     />
-                    <label htmlFor="isImportant" className="ml-2 text-sm text-gray-700">
+                    <label
+                      htmlFor="isImportant"
+                      className="ml-2 text-sm text-gray-700"
+                    >
                       중요 공지로 표시
                     </label>
                   </div>
@@ -338,7 +349,7 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
                       className="flex-1 px-4 py-3 bg-primary text-white rounded-lg hover:bg-green-800 transition-colors disabled:opacity-50 flex items-center justify-center"
                     >
                       <Save size={18} className="mr-2" />
-                      {isSaving ? "저장 중..." : "저장"}
+                      {isSaving ? '저장 중...' : '저장'}
                     </button>
                   </div>
                 </form>
@@ -411,7 +422,7 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
                 disabled={isDeleting}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                {isDeleting ? "삭제 중..." : "삭제"}
+                {isDeleting ? '삭제 중...' : '삭제'}
               </button>
             </div>
           </div>

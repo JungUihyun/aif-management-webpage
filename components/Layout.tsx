@@ -1,8 +1,16 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Home, Calendar, CreditCard, User, Shield, LogOut, Bell } from "lucide-react";
-import { User as UserType, UserRole } from "../types";
-import { useAuth } from "../App";
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import {
+  Home,
+  Calendar,
+  CreditCard,
+  User,
+  Shield,
+  LogOut,
+  Bell,
+} from 'lucide-react';
+import { User as UserType, UserRole } from '../types';
+import { useAuth } from '../App';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -29,7 +37,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
     <Link
       to={to}
       className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-        isActive(to) ? "text-primary" : "text-gray-400 hover:text-gray-600"
+        isActive(to) ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
       }`}
     >
       <Icon size={24} />
@@ -51,8 +59,8 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
       to={to}
       className={`flex items-center px-4 py-3 mb-2 rounded-lg transition-colors ${
         isActive(to)
-          ? "bg-primary text-white"
-          : "text-gray-600 hover:bg-gray-100"
+          ? 'bg-primary text-white'
+          : 'text-gray-600 hover:bg-gray-100'
       }`}
     >
       <Icon size={20} className="mr-3" />

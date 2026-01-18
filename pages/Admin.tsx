@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { User, UserRole } from "../types";
-import { api } from "../services/api";
-import { getUserRoleLabel } from "../utils/formatters";
-import { Users, AlertTriangle, RefreshCw } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { User, UserRole } from '../types';
+import { api } from '../services/api';
+import { getUserRoleLabel } from '../utils/formatters';
+import { Users, AlertTriangle, RefreshCw } from 'lucide-react';
 
 const Admin: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -36,11 +36,11 @@ const Admin: React.FC = () => {
         );
         // alert("권한이 변경되었습니다."); // 선택사항: 너무 빈번하면 귀찮을 수 있음
       } else {
-        alert("권한 변경에 실패했습니다.");
+        alert('권한 변경에 실패했습니다.');
       }
     } catch (e) {
       console.error(e);
-      alert("오류가 발생했습니다.");
+      alert('오류가 발생했습니다.');
     }
   };
 
@@ -48,13 +48,13 @@ const Admin: React.FC = () => {
   const getRoleSelectStyle = (role: UserRole) => {
     switch (role) {
       case UserRole.EXECUTIVE:
-        return "bg-purple-100 text-purple-800 border-purple-200";
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       case UserRole.MANAGER:
-        return "bg-blue-100 text-blue-800 border-blue-200";
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       case UserRole.MEMBER:
-        return "bg-green-100 text-green-800 border-green-200";
+        return 'bg-green-100 text-green-800 border-green-200';
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -63,7 +63,7 @@ const Admin: React.FC = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      alert("카카오뱅크 거래내역이 성공적으로 업데이트되었습니다.");
+      alert('카카오뱅크 거래내역이 성공적으로 업데이트되었습니다.');
     }, 1500);
   };
 

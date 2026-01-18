@@ -1,13 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  Calendar,
-  Bell,
-  ChevronRight,
-  TrendingUp,
-} from "lucide-react";
-import { Match, Notice, User } from "../types";
-import { api } from "../services/api";
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Calendar, Bell, ChevronRight, TrendingUp } from 'lucide-react';
+import { Match, Notice, User } from '../types';
+import { api } from '../services/api';
 
 interface DashboardProps {
   user: User;
@@ -25,7 +20,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
       // [로직] 예정된 경기만 필터링하고 날짜순으로 정렬 후 상위 3개만 추출
       const upcoming = matches
-        .filter((m) => m.status === "UPCOMING")
+        .filter((m) => m.status === 'UPCOMING')
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 3);
 
@@ -76,7 +71,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                     <div>
                       <div className="flex items-center space-x-2 mb-2">
                         <span className="bg-green-50 text-green-700 text-xs font-bold px-2 py-1 rounded">
-                          {match.date.split("-").slice(1).join("/")}
+                          {match.date.split('-').slice(1).join('/')}
                         </span>
                         <span className="text-sm font-medium text-gray-600">
                           {match.time}

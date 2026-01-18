@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { CreditCard, AlertCircle, CheckCircle, Send } from "lucide-react";
-import { User, DuesRecord, UserRole } from "../types";
-import { api } from "../services/api";
+import React, { useState, useEffect } from 'react';
+import { CreditCard, AlertCircle, CheckCircle, Send } from 'lucide-react';
+import { User, DuesRecord, UserRole } from '../types';
+import { api } from '../services/api';
 
 interface DuesProps {
   user: User;
 }
 
 const Dues: React.FC<DuesProps> = ({ user }) => {
-  const [activeTab, setActiveTab] = useState<"status" | "all">("status"); // 탭 상태: 개인 내역 vs 전체 관리
+  const [activeTab, setActiveTab] = useState<'status' | 'all'>('status'); // 탭 상태: 개인 내역 vs 전체 관리
   const [duesList, setDuesList] = useState<DuesRecord[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
@@ -23,11 +23,11 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
   const myDues = duesList.filter((d) => d.userId === user.id);
 
   // 필터링: 미납자 목록 (관리자용)
-  const unpaidUsers = duesList.filter((d) => d.status === "UNPAID");
+  const unpaidUsers = duesList.filter((d) => d.status === 'UNPAID');
 
   // ID로 유저 이름 찾기 헬퍼
   const getUserName = (id: string) =>
-    users.find((u) => u.id === id)?.name || "Unknown";
+    users.find((u) => u.id === id)?.name || 'Unknown';
 
   return (
     <div className="space-y-6">
@@ -52,11 +52,11 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
       {/* 탭 네비게이션 */}
       <div className="flex border-b border-gray-200">
         <button
-          onClick={() => setActiveTab("status")}
+          onClick={() => setActiveTab('status')}
           className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${
-            activeTab === "status"
-              ? "border-primary text-primary"
-              : "border-transparent text-gray-500"
+            activeTab === 'status'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-gray-500'
           }`}
         >
           내 납부 내역
@@ -65,11 +65,11 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
         {(user.role === UserRole.EXECUTIVE ||
           user.role === UserRole.MANAGER) && (
           <button
-            onClick={() => setActiveTab("all")}
+            onClick={() => setActiveTab('all')}
             className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${
-              activeTab === "all"
-                ? "border-primary text-primary"
-                : "border-transparent text-gray-500"
+              activeTab === 'all'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500'
             }`}
           >
             전체 납부 관리
@@ -79,7 +79,7 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {/* 개인 납부 내역 테이블 */}
-        {activeTab === "status" && (
+        {activeTab === 'status' && (
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -107,7 +107,7 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
                     {due.amount.toLocaleString()}원
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {due.status === "PAID" ? (
+                    {due.status === 'PAID' ? (
                       <span className="flex items-center text-green-600 text-sm">
                         <CheckCircle size={16} className="mr-1" /> 납부완료
                       </span>
@@ -118,7 +118,7 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {due.paidDate || "-"}
+                    {due.paidDate || '-'}
                   </td>
                 </tr>
               ))}
@@ -127,7 +127,7 @@ const Dues: React.FC<DuesProps> = ({ user }) => {
         )}
 
         {/* 전체 관리 테이블 (관리자용) */}
-        {activeTab === "all" && (
+        {activeTab === 'all' && (
           <div className="p-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-gray-700">

@@ -5,9 +5,9 @@ import {
   MatchStatus,
   Notice,
   UserStats,
-} from "../types";
-import { supabase } from "./supabase";
-import bcrypt from "bcryptjs";
+} from '../types';
+import { supabase } from './supabase';
+import bcrypt from 'bcryptjs';
 
 /**
  * 이 파일은 백엔드 API와 데이터베이스를 처리하는 서비스 레이어입니다.
@@ -18,8 +18,8 @@ import bcrypt from "bcryptjs";
 const getDefaultAvatar = (gender: number) => {
   // 남자 1, 여자 2
   return gender === 2
-    ? "/images/default_avatar_female.png"
-    : "/images/default_avatar_male.png";
+    ? '/images/default_avatar_female.png'
+    : '/images/default_avatar_male.png';
 };
 
 // --- 헬퍼 함수: DB 데이터 -> 앱 데이터 타입 변환 ---
@@ -42,7 +42,7 @@ const mapMatchFromDB = (dbMatch: any): Match => {
 
   return {
     ...dbMatch,
-    time: dbMatch.time ? dbMatch.time.substring(0, 5) : "",
+    time: dbMatch.time ? dbMatch.time.substring(0, 5) : '',
     participants: participants,
   };
 };
@@ -61,9 +61,9 @@ export const api = {
   // 로그인
   login: async (id: string, password?: string): Promise<User | null> => {
     const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", id)
+      .from('users')
+      .select('*')
+      .eq('id', id)
       .single();
 
     if (error || !data) {
@@ -80,22 +80,22 @@ export const api = {
 
   // 회원가입
   signUp: async (
-    user: Omit<User, "matches" | "role" | "avatarUrl" | "joinedAt">
+    user: Omit<User, 'matches' | 'role' | 'avatarUrl' | 'joinedAt'>
   ): Promise<boolean> => {
     // 1. 학번 중복 체크
     const { data: existingUser } = await supabase
-      .from("users")
-      .select("id")
-      .eq("id", user.id)
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
       .maybeSingle();
 
     if (existingUser) {
-      alert("이미 등록된 학번입니다.");
+      alert('이미 등록된 학번입니다.');
       return false;
     }
 
     // 2. DB Insert
-    const { error } = await supabase.from("users").insert([
+    const { error } = await supabase.from('users').insert([
       {
         id: user.id,
         password: await bcrypt.hash(user.password!, 10),
@@ -111,7 +111,7 @@ export const api = {
     ]);
 
     if (error) {
-      console.error("회원가입 오류:", error);
+      console.error('회원가입 오류:', error);
       return false;
     }
 
@@ -121,12 +121,12 @@ export const api = {
   // 경기 목록 조회
   getMatches: async (): Promise<Match[]> => {
     const { data, error } = await supabase
-      .from("matches")
-      .select("*, match_participants(users(*))")
-      .order("date", { ascending: true });
+      .from('matches')
+      .select('*, match_participants(users(*))')
+      .order('date', { ascending: true });
 
     if (error) {
-      console.error("경기 목록 조회 오류:", error);
+      console.error('경기 목록 조회 오류:', error);
       return [];
     }
 
@@ -136,13 +136,13 @@ export const api = {
   // 경기 상세 조회
   getMatchById: async (id: string): Promise<Match | undefined> => {
     const { data, error } = await supabase
-      .from("matches")
-      .select("*, match_participants(users(*))")
-      .eq("id", id)
+      .from('matches')
+      .select('*, match_participants(users(*))')
+      .eq('id', id)
       .single();
 
     if (error) {
-      console.error("경기 상세 조회 오류:", error);
+      console.error('경기 상세 조회 오류:', error);
       return undefined;
     }
 
@@ -151,10 +151,10 @@ export const api = {
 
   // 경기 생성
   createMatch: async (
-    matchData: Omit<Match, "id" | "status" | "participants">
+    matchData: Omit<Match, 'id' | 'status' | 'participants'>
   ): Promise<Match | null> => {
     const { data, error } = await supabase
-      .from("matches")
+      .from('matches')
       .insert([
         {
           ...matchData,
@@ -165,7 +165,7 @@ export const api = {
       .single();
 
     if (error) {
-      console.error("경기 생성 오류:", error);
+      console.error('경기 생성 오류:', error);
       return null;
     }
 
@@ -175,12 +175,12 @@ export const api = {
   // 공지사항 조회
   getNotices: async (): Promise<Notice[]> => {
     const { data, error } = await supabase
-      .from("notices")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .from('notices')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error("공지사항 조회 오류:", error);
+      console.error('공지사항 조회 오류:', error);
       return [];
     }
 
@@ -189,9 +189,9 @@ export const api = {
 
   // 공지사항 작성
   createNotice: async (
-    noticeData: Omit<Notice, "id" | "date" | "createdAt">
+    noticeData: Omit<Notice, 'id' | 'date' | 'createdAt'>
   ): Promise<boolean> => {
-    const { error } = await supabase.from("notices").insert([
+    const { error } = await supabase.from('notices').insert([
       {
         title: noticeData.title,
         content: noticeData.content,
@@ -201,7 +201,7 @@ export const api = {
     ]);
 
     if (error) {
-      console.error("공지사항 작성 오류:", error);
+      console.error('공지사항 작성 오류:', error);
       return false;
     }
 
@@ -211,20 +211,22 @@ export const api = {
   // 공지사항 수정
   updateNotice: async (
     noticeId: string,
-    noticeData: Partial<Omit<Notice, "id" | "date" | "createdAt" | "authorId">>
+    noticeData: Partial<Omit<Notice, 'id' | 'date' | 'createdAt' | 'authorId'>>
   ): Promise<boolean> => {
     const updateData: any = {};
     if (noticeData.title !== undefined) updateData.title = noticeData.title;
-    if (noticeData.content !== undefined) updateData.content = noticeData.content;
-    if (noticeData.isImportant !== undefined) updateData.is_important = noticeData.isImportant;
+    if (noticeData.content !== undefined)
+      updateData.content = noticeData.content;
+    if (noticeData.isImportant !== undefined)
+      updateData.is_important = noticeData.isImportant;
 
     const { error } = await supabase
-      .from("notices")
+      .from('notices')
       .update(updateData)
-      .eq("id", noticeId);
+      .eq('id', noticeId);
 
     if (error) {
-      console.error("공지사항 수정 오류:", error);
+      console.error('공지사항 수정 오류:', error);
       return false;
     }
 
@@ -234,12 +236,12 @@ export const api = {
   // 공지사항 삭제
   deleteNotice: async (noticeId: string): Promise<boolean> => {
     const { error } = await supabase
-      .from("notices")
+      .from('notices')
       .delete()
-      .eq("id", noticeId);
+      .eq('id', noticeId);
 
     if (error) {
-      console.error("공지사항 삭제 오류:", error);
+      console.error('공지사항 삭제 오류:', error);
       return false;
     }
 
@@ -249,13 +251,13 @@ export const api = {
   // 공지사항 상세 조회
   getNoticeById: async (noticeId: string): Promise<Notice | null> => {
     const { data, error } = await supabase
-      .from("notices")
-      .select("*")
-      .eq("id", noticeId)
+      .from('notices')
+      .select('*')
+      .eq('id', noticeId)
       .single();
 
     if (error) {
-      console.error("공지사항 상세 조회 오류:", error);
+      console.error('공지사항 상세 조회 오류:', error);
       return null;
     }
 
@@ -264,10 +266,10 @@ export const api = {
 
   // 유저 목록 조회
   getUsers: async (): Promise<User[]> => {
-    const { data, error } = await supabase.from("users").select("*");
+    const { data, error } = await supabase.from('users').select('*');
 
     if (error) {
-      console.error("유저 목록 조회 오류:", error);
+      console.error('유저 목록 조회 오류:', error);
       return [];
     }
 
@@ -280,12 +282,12 @@ export const api = {
     newRole: UserRole
   ): Promise<boolean> => {
     const { error } = await supabase
-      .from("users")
+      .from('users')
       .update({ role: newRole })
-      .eq("id", userId);
+      .eq('id', userId);
 
     if (error) {
-      console.error("유저 권한 수정 오류:", error);
+      console.error('유저 권한 수정 오류:', error);
       return false;
     }
 

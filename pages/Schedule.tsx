@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ChevronLeft,
   ChevronRight,
@@ -7,37 +7,37 @@ import {
   Clock,
   Plus,
   X,
-} from "lucide-react";
-import { Match, MatchStatus, UserRole } from "../types";
-import { api } from "../services/api";
-import { useAuth } from "../App";
+} from 'lucide-react';
+import { Match, MatchStatus, UserRole } from '../types';
+import { api } from '../services/api';
+import { useAuth } from '../App';
 
 const Schedule: React.FC = () => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [matches, setMatches] = useState<Match[]>([]);
-  const [view, setView] = useState<"month" | "list">("list"); // 뷰 모드: 리스트형 vs 달력형
+  const [view, setView] = useState<'month' | 'list'>('list'); // 뷰 모드: 리스트형 vs 달력형
 
   // 모달 상태 관리
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newMatch, setNewMatch] = useState({
-    date: "",
-    time: "",
-    opponent: "",
-    location: "",
+    date: '',
+    time: '',
+    opponent: '',
+    location: '',
   });
 
   // 경기 생성 권한 확인 (임원 또는 매니저만 가능)
   const canCreateMatch =
     user?.role === UserRole.EXECUTIVE || user?.role === UserRole.MANAGER;
 
-  useEffect(() => {
-    loadMatches();
-  }, []);
-
   const loadMatches = () => {
     api.getMatches().then(setMatches);
   };
+
+  useEffect(() => {
+    loadMatches();
+  }, []);
 
   // 해당 월의 총 일수 계산 (마지막 날짜)
   const getDaysInMonth = (date: Date) => {
@@ -105,7 +105,7 @@ const Schedule: React.FC = () => {
       !newMatch.opponent ||
       !newMatch.location
     ) {
-      alert("모든 필드를 입력해주세요.");
+      alert('모든 필드를 입력해주세요.');
       return;
     }
 
@@ -120,7 +120,7 @@ const Schedule: React.FC = () => {
     });
 
     setIsModalOpen(false);
-    setNewMatch({ date: "", time: "", opponent: "", location: "" }); // 폼 초기화
+    setNewMatch({ date: '', time: '', opponent: '', location: '' }); // 폼 초기화
     loadMatches(); // 목록 새로고침
   };
 
@@ -158,21 +158,21 @@ const Schedule: React.FC = () => {
           )}
           <div className="flex bg-gray-100 p-1 rounded-lg flex-shrink-0">
             <button
-              onClick={() => setView("list")}
+              onClick={() => setView('list')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                view === "list"
-                  ? "bg-white shadow-sm text-primary"
-                  : "text-gray-500"
+                view === 'list'
+                  ? 'bg-white shadow-sm text-primary'
+                  : 'text-gray-500'
               }`}
             >
               리스트
             </button>
             <button
-              onClick={() => setView("month")}
+              onClick={() => setView('month')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                view === "month"
-                  ? "bg-white shadow-sm text-primary"
-                  : "text-gray-500"
+                view === 'month'
+                  ? 'bg-white shadow-sm text-primary'
+                  : 'text-gray-500'
               }`}
             >
               달력
@@ -182,7 +182,7 @@ const Schedule: React.FC = () => {
       </div>
 
       {/* 리스트 뷰 렌더링 */}
-      {view === "list" && (
+      {view === 'list' && (
         <div className="space-y-3">
           {filteredMatches.length === 0 && (
             <div className="text-center py-12 text-gray-500 bg-white rounded-xl">
@@ -201,10 +201,10 @@ const Schedule: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <div className="flex flex-col items-center bg-gray-50 p-2 rounded-lg min-w-[60px]">
                         <span className="text-xs text-gray-500">
-                          {match.date.split("-")[1]}월
+                          {match.date.split('-')[1]}월
                         </span>
                         <span className="text-xl font-bold text-gray-800">
-                          {match.date.split("-")[2]}
+                          {match.date.split('-')[2]}
                         </span>
                       </div>
                       <div>
@@ -216,7 +216,7 @@ const Schedule: React.FC = () => {
                             <Clock size={14} className="mr-1" /> {match.time}
                           </span>
                           <span className="flex items-center">
-                            <MapPin size={14} className="mr-1" />{" "}
+                            <MapPin size={14} className="mr-1" />{' '}
                             {match.location}
                           </span>
                         </div>
@@ -236,10 +236,10 @@ const Schedule: React.FC = () => {
       )}
 
       {/* 달력 뷰 렌더링 */}
-      {view === "month" && (
+      {view === 'month' && (
         <div className="bg-white rounded-xl shadow-sm p-4 overflow-x-auto">
           <div className="grid grid-cols-7 gap-1 min-w-[600px]">
-            {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
+            {['일', '월', '화', '수', '목', '금', '토'].map((d) => (
               <div
                 key={d}
                 className="text-center text-sm font-bold text-gray-500 py-2"
@@ -267,7 +267,7 @@ const Schedule: React.FC = () => {
               const day = i + 1;
               const dateStr = `${currentDate.getFullYear()}-${String(
                 currentDate.getMonth() + 1
-              ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+              ).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
               const dayMatches = matches.filter((m) => m.date === dateStr);
               return (
                 <div

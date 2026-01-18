@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { MapPin, Clock, Users, ArrowLeft, Shield, Edit2 } from "lucide-react";
-import { Match, MatchStatus, User, UserRole } from "../types";
-import { api } from "../services/api";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { MapPin, Clock, Users, ArrowLeft, Shield, Edit2 } from 'lucide-react';
+import { Match, MatchStatus, User, UserRole } from '../types';
+import { api } from '../services/api';
 
 interface MatchDetailProps {
   user: User;
@@ -54,8 +54,8 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
           <div className="flex justify-between items-start mb-4">
             <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
               {match.status === MatchStatus.UPCOMING
-                ? "경기 예정"
-                : "경기 종료"}
+                ? '경기 예정'
+                : '경기 종료'}
             </span>
             {/* 관리자에게만 수정 버튼 표시 */}
             {canEdit && (
@@ -104,11 +104,11 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
               onClick={handleToggleJoin}
               className={`px-6 py-2 rounded-lg font-bold transition-colors ${
                 isJoined
-                  ? "bg-red-100 text-red-600 hover:bg-red-200"
-                  : "bg-primary text-white hover:bg-green-800"
+                  ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                  : 'bg-primary text-white hover:bg-green-800'
               }`}
             >
-              {isJoined ? "참여 취소" : "참여 신청"}
+              {isJoined ? '참여 취소' : '참여 신청'}
             </button>
           )}
         </div>
@@ -119,7 +119,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
           <div>
             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
               <Shield size={20} className="mr-2 text-primary" />
-              선발 라인업 (포메이션: {match.formation || "미정"})
+              선발 라인업 (포메이션: {match.formation || '미정'})
             </h3>
 
             {/* 축구장 그래픽 구현 */}
@@ -180,7 +180,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
                           </span>
                         </div>
                         <div className="text-xs text-gray-500 mt-0.5">
-                          주 포지션:{" "}
+                          주 포지션:{' '}
                           <span className="font-medium text-primary">
                             {participant.position}
                           </span>
@@ -205,13 +205,13 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
 // 포지션 코드에 따라 경기장 위 좌표(top, left %)를 반환하는 헬퍼 함수
 const getPosCoords = (pos: string) => {
   const map: Record<string, { top: string; left: string }> = {
-    GK: { top: "90%", left: "50%" },
-    CB1: { top: "75%", left: "35%" },
-    CB2: { top: "75%", left: "65%" },
-    CM: { top: "50%", left: "50%" },
-    ST: { top: "20%", left: "50%" },
+    GK: { top: '90%', left: '50%' },
+    CB1: { top: '75%', left: '35%' },
+    CB2: { top: '75%', left: '65%' },
+    CM: { top: '50%', left: '50%' },
+    ST: { top: '20%', left: '50%' },
   };
-  return map[pos] || { top: "50%", left: "50%" };
+  return map[pos] || { top: '50%', left: '50%' };
 };
 
 export default MatchDetail;
