@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types';
 import { api } from '../services/api';
 import { getUserRoleLabel } from '../utils/formatters';
@@ -8,6 +8,11 @@ import { useUsers } from '../hooks/useUsers';
 const Admin: React.FC = () => {
   const { users: allUsers, refetch } = useUsers();
   const [users, setUsers] = useState(allUsers);
+
+  // allUsers가 변경될 때 users 상태 동기화
+  useEffect(() => {
+    setUsers(allUsers);
+  }, [allUsers]);
 
   // 유저 권한 변경 핸들러 (임원/매니저/멤버)
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
@@ -110,57 +115,59 @@ const Admin: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <img
-                        className="h-8 w-8 rounded-full mr-3"
-                        src={user.avatarUrl}
-                        alt=""
-                      />
-                      <div className="text-sm font-medium text-gray-900">
-                        {user.name}
+              {users
+                .sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+                .map((user) => (
+                  <tr key={user.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <img
+                          className="h-8 w-8 rounded-full mr-3"
+                          src={user.avatarUrl}
+                          alt=""
+                        />
+                        <div className="text-sm font-medium text-gray-900">
+                          {user.name}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {/* Select Box를 뱃지처럼 스타일링하여 병합 */}
-                    <div className="relative inline-block w-30">
-                      <select
-                        value={user.role}
-                        onChange={
-                          (e) =>
-                            handleRoleChange(
-                              user.id,
-                              e.target.value as UserRole
-                            ) // 즉시 변경 핸들러 호출
-                        }
-                        className={`block w-full pl-3 pr-8 py-2 text-xs font-bold border rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-colors ${getRoleSelectStyle(
-                          user.role
-                        )}`}
-                      >
-                        <option value={UserRole.MEMBER}>회원</option>
-                        <option value={UserRole.MANAGER}>매니저</option>
-                        <option value={UserRole.EXECUTIVE}>임원</option>
-                      </select>
-                      {/* 커스텀 화살표 아이콘 */}
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-600">
-                        <svg
-                          className="fill-current h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {/* Select Box를 뱃지처럼 스타일링하여 병합 */}
+                      <div className="relative inline-block w-30">
+                        <select
+                          value={user.role}
+                          onChange={
+                            (e) =>
+                              handleRoleChange(
+                                user.id,
+                                e.target.value as UserRole
+                              ) // 즉시 변경 핸들러 호출
+                          }
+                          className={`block w-full pl-3 pr-8 py-2 text-xs font-bold border rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-colors ${getRoleSelectStyle(
+                            user.role
+                          )}`}
                         >
-                          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                        </svg>
+                          <option value={UserRole.MEMBER}>회원</option>
+                          <option value={UserRole.MANAGER}>매니저</option>
+                          <option value={UserRole.EXECUTIVE}>임원</option>
+                        </select>
+                        {/* 커스텀 화살표 아이콘 */}
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-600">
+                          <svg
+                            className="fill-current h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                          </svg>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>

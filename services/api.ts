@@ -26,6 +26,8 @@ const getDefaultAvatar = (gender: number) => {
 const mapUserFromDB = (dbUser: any): User => {
   return {
     ...dbUser,
+    birth:
+      typeof dbUser.birth === 'string' ? parseInt(dbUser.birth) : dbUser.birth,
     shortName: dbUser.short_name || dbUser.name,
     avatarUrl: dbUser.avatar_url || getDefaultAvatar(dbUser.gender),
     joinedAt: dbUser.joined_at,
