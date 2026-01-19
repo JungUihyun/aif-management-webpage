@@ -179,49 +179,99 @@ const Schedule: React.FC = () => {
               이 달의 경기 일정이 없습니다.
             </div>
           )}
-          {/* 날짜순 정렬 후 맵핑 */}
+          {/* 날짜순 정렬 후 맵핑 - 최신순(내림차순) */}
           {filteredMatches
             .sort(
-              (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
             )
-            .map((match) => (
-              <Link key={match.id} to={`/match/${match.id}`} className="block">
-                <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-primary transition-all group">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex flex-col items-center bg-gray-50 p-2 rounded-lg min-w-[60px]">
-                        <span className="text-xs text-gray-500">
-                          {match.date.split('-')[1]}월
-                        </span>
-                        <span className="text-xl font-bold text-gray-800">
-                          {match.date.split('-')[2]}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-800 group-hover:text-primary transition-colors">
-                          vs {match.opponent}
-                        </h3>
-                        <div className="flex items-center text-sm text-gray-500 mt-1 space-x-3">
-                          <span className="flex items-center">
-                            <Clock size={14} className="mr-1" /> {match.time}
+            .map((match) => {
+              // 경기 결과 판정 (스코어 기준)
+              const isCompleted = match.status === MatchStatus.COMPLETED;
+              const hasScore = match.score !== undefined;
+              let matchResultClass = '';
+
+              if (isCompleted && hasScore) {
+                if (match.score.us > match.score.opponent) {
+                  // 승리: 은은한 초록색
+                  matchResultClass =
+                    'bg-green-50/50 border-green-200 hover:border-green-400';
+                } else if (match.score.us < match.score.opponent) {
+                  // 패배: 은은한 빨간색
+                  matchResultClass =
+                    'bg-red-50/50 border-red-200 hover:border-red-400';
+                } else {
+                  // 무승부: 은은한 노란색
+                  matchResultClass =
+                    'bg-yellow-50/50 border-yellow-200 hover:border-yellow-400';
+                }
+              } else {
+                // 예정 경기 또는 취소: 기본 스타일
+                matchResultClass = 'border-gray-100 hover:border-primary';
+              }
+
+              return (
+                <Link
+                  key={match.id}
+                  to={`/match/${match.id}`}
+                  className="block"
+                >
+                  <div
+                    className={`bg-white p-5 rounded-xl shadow-sm border transition-all group ${matchResultClass}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <div className="flex flex-col items-center bg-gray-50 p-2 rounded-lg min-w-[60px]">
+                          <span className="text-xs text-gray-500">
+                            {match.date.split('-')[1]}월
                           </span>
-                          <span className="flex items-center">
-                            <MapPin size={14} className="mr-1" />{' '}
-                            {match.location}
+                          <span className="text-xl font-bold text-gray-800">
+                            {match.date.split('-')[2]}
                           </span>
                         </div>
+
+                        {/* 스코어 표시 - 날짜 옆에 작게 */}
+                        {match.status === MatchStatus.COMPLETED &&
+                          match.score && (
+                            <div className="flex items-center px-3 py-1 rounded-lg border border-black/30">
+                              <span className="text-lg font-bold text-primary font-mono">
+                                {match.score.us}
+                              </span>
+                              <span className="text-xs text-gray-400 mx-1.5">
+                                :
+                              </span>
+                              <span className="text-lg font-bold text-gray-600 font-mono">
+                                {match.score.opponent}
+                              </span>
+                            </div>
+                          )}
+
+                        <div>
+                          <h3 className="font-bold text-lg text-gray-800 group-hover:transition-colors">
+                            vs {match.opponent}
+                          </h3>
+                          <div className="flex items-center text-sm text-gray-500 mt-1 space-x-3">
+                            <span className="flex items-center">
+                              <Clock size={14} className="mr-1" /> {match.time}
+                            </span>
+                            <span className="flex items-center">
+                              <MapPin size={14} className="mr-1" />{' '}
+                              {match.location}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end space-y-2">
+                        {getStatusBadge(match.status)}
+                        <span className="text-xs text-gray-400">
+                          {match.participants.length}명 참여
+                        </span>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end space-y-2">
-                      {getStatusBadge(match.status)}
-                      <span className="text-xs text-gray-400">
-                        {match.participants.length}명 참여
-                      </span>
-                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
         </div>
       )}
 

@@ -79,3 +79,12 @@ export interface UserStats {
   assists: number; // 도움
   attendanceRate: number; // 참석률 (백분율)
 }
+
+// 득점 기록 인터페이스
+export interface Goal {
+  id: string;
+  matchId: string;
+  scorerId: string;
+  assistId?: string | null; // 어시스트한 선수 ID (없을 수도 있음)
+  createdAt: string;
+}

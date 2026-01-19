@@ -5,6 +5,7 @@ import {
   MatchStatus,
   Notice,
   UserStats,
+  Goal,
 } from '../types';
 import { supabase } from './supabase';
 
@@ -39,10 +40,17 @@ const mapMatchFromDB = (dbMatch: any): Match => {
     ? dbMatch.match_participants.map((p: any) => mapUserFromDB(p.users))
     : [];
 
+  // DB의 score_us, score_opponent를 score 객체로 변환
+  const score =
+    dbMatch.score_us !== null && dbMatch.score_opponent !== null
+      ? { us: dbMatch.score_us, opponent: dbMatch.score_opponent }
+      : undefined;
+
   return {
     ...dbMatch,
     time: dbMatch.time ? dbMatch.time.substring(0, 5) : '',
     participants: participants,
+    score: score,
   };
 };
 
@@ -281,6 +289,135 @@ export const api = {
 
     if (error) {
       console.error('경기 상태 업데이트 오류:', error);
+      return false;
+    }
+
+    return true;
+  },
+
+  // 경기 스코어 업데이트
+  updateMatchScore: async (
+    matchId: string,
+    ourScore: number,
+    opponentScore: number
+  ): Promise<boolean> => {
+    const { error } = await supabase
+      .from('matches')
+      .update({
+        score_us: ourScore,
+        score_opponent: opponentScore,
+      })
+      .eq('id', matchId);
+
+    if (error) {
+      console.error('스코어 업데이트 오류:', error);
+      return false;
+    }
+
+    return true;
+  },
+
+  // 경기 참여자 업데이트
+  updateMatchParticipants: async (
+    matchId: string,
+    participantIds: string[]
+  ): Promise<boolean> => {
+    // 기존 참여자 모두 삭제
+    const { error: deleteError } = await supabase
+      .from('match_participants')
+      .delete()
+      .eq('match_id', matchId);
+
+    if (deleteError) {
+      console.error('기존 참여자 삭제 오류:', deleteError);
+      return false;
+    }
+
+    // 새 참여자 추가
+    if (participantIds.length > 0) {
+      const participants = participantIds.map((userId) => ({
+        match_id: matchId,
+        user_id: userId,
+      }));
+
+      const { error: insertError } = await supabase
+        .from('match_participants')
+        .insert(participants);
+
+      if (insertError) {
+        console.error('참여자 추가 오류:', insertError);
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  // 경기별 골 목록 조회
+  getMatchGoals: async (matchId: string): Promise<Goal[]> => {
+    const { data, error } = await supabase
+      .from('match_goals')
+      .select('*')
+      .eq('match_id', matchId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('골 목록 조회 오류:', error);
+      return [];
+    }
+
+    return data
+      ? data.map((g: any) => ({
+          id: g.id,
+          matchId: g.match_id,
+          scorerId: g.scorer_id,
+          assistId: g.assist_id,
+          createdAt: g.created_at,
+        }))
+      : [];
+  },
+
+  // 골 추가
+  createGoal: async (
+    matchId: string,
+    scorerId: string,
+    assistId?: string | null
+  ): Promise<Goal | null> => {
+    const { data, error } = await supabase
+      .from('match_goals')
+      .insert([
+        {
+          match_id: matchId,
+          scorer_id: scorerId,
+          assist_id: assistId || null,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('골 추가 오류:', error);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      matchId: data.match_id,
+      scorerId: data.scorer_id,
+      assistId: data.assist_id,
+      createdAt: data.created_at,
+    };
+  },
+
+  // 골 삭제
+  deleteGoal: async (goalId: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('match_goals')
+      .delete()
+      .eq('id', goalId);
+
+    if (error) {
+      console.error('골 삭제 오류:', error);
       return false;
     }
 

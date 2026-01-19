@@ -9,8 +9,9 @@ import {
   Edit2,
   ChevronDown,
 } from 'lucide-react';
-import { Match, MatchStatus, User, UserRole } from '../types';
+import { Match, MatchStatus, User, UserRole, Goal } from '../types';
 import { api } from '../services/api';
+import MatchEditModal from '../components/MatchEditModal';
 
 interface MatchDetailProps {
   user: User;
@@ -21,21 +22,31 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [match, setMatch] = useState<Match | null>(null);
-  const [isEditing, setIsEditing] = useState(false); // 수정 모드 (UI만 구현됨)
+  const [isEditing, setIsEditing] = useState(false); // 수정 모달 표시 여부
   const [isJoined, setIsJoined] = useState(false); // 현재 유저의 참여 여부
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false); // 상태 업데이트 중
+  const [allUsers, setAllUsers] = useState<User[]>([]); // 전체 유저 목록 (참여자 관리용)
+  const [goals, setGoals] = useState<Goal[]>([]); // 득점 기록
 
-  useEffect(() => {
+  const fetchMatchData = () => {
     if (id) {
       api.getMatchById(id).then((data) => {
         if (data) {
           setMatch(data);
           // 참여자 목록에 내 학번이 있는지 확인
-          setIsJoined(data.participants.includes(user.id));
+          setIsJoined(data.participants.some((p) => p.id === user.id));
         }
       });
+      // 득점 기록 조회
+      api.getMatchGoals(id).then(setGoals);
     }
-  }, [id, user.id]);
+  };
+
+  useEffect(() => {
+    fetchMatchData();
+    // 전체 유저 목록 가져오기 (수정 모달용)
+    api.getUsers().then(setAllUsers);
+  }, [id]);
 
   const handleToggleJoin = () => {
     // 실제 앱에서는 API를 호출하여 참여 상태를 DB에 업데이트해야 함
@@ -115,8 +126,9 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
             {/* 관리자에게만 수정 버튼 표시 */}
             {canEdit && (
               <button
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={() => setIsEditing(true)}
                 className="bg-white/20 p-2 rounded-full hover:bg-white/30 backdrop-blur-sm"
+                title="경기 수정"
               >
                 <Edit2 size={16} />
               </button>
@@ -124,6 +136,47 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
           </div>
           <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
             <div>
+              {/* 스코어 표시 - 스코어가 설정되어 있으면 항상 표시 */}
+              {match.score && (
+                <div className="mb-4 bg-white/10 p-4 rounded-xl backdrop-blur-sm inline-block">
+                  <div className="text-sm opacity-80 mb-1">SCORE</div>
+                  <div className="text-4xl font-bold font-mono tracking-widest">
+                    {match.score.us} : {match.score.opponent}
+                  </div>
+                </div>
+              )}
+
+              {/* 득점 내역 표시 */}
+              {goals.length > 0 && (
+                <div className="mb-4 space-y-1">
+                  {goals.map((goal) => {
+                    const scorer = allUsers.find((u) => u.id === goal.scorerId);
+                    const assister = goal.assistId
+                      ? allUsers.find((u) => u.id === goal.assistId)
+                      : null;
+                    return (
+                      <div
+                        key={goal.id}
+                        className="text-white/90 text-sm flex items-center"
+                      >
+                        <span className="mr-2">⚽</span>
+                        <span className="font-medium">
+                          {scorer?.name || goal.scorerId}
+                        </span>
+                        {assister && (
+                          <>
+                            <span className="mx-2 text-white/60">←</span>
+                            <span className="text-white/80">
+                              {assister.name}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <h1 className="text-3xl font-bold mb-2">vs {match.opponent}</h1>
               <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 text-white/80">
                 <span className="flex items-center">
@@ -134,16 +187,6 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
                 </span>
               </div>
             </div>
-
-            {/* 종료된 경기인 경우 스코어 보드 표시 */}
-            {match.status === MatchStatus.COMPLETED && match.score && (
-              <div className="mt-6 md:mt-0 bg-white/10 p-4 rounded-xl backdrop-blur-sm">
-                <div className="text-sm opacity-80 mb-1">FINAL SCORE</div>
-                <div className="text-4xl font-bold font-mono tracking-widest">
-                  {match.score.us} : {match.score.opponent}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -253,6 +296,18 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
           </div>
         </div>
       </div>
+
+      {/* 경기 수정 모달 */}
+      {isEditing && (
+        <MatchEditModal
+          match={match}
+          allUsers={allUsers}
+          onClose={() => setIsEditing(false)}
+          onSave={() => {
+            fetchMatchData();
+          }}
+        />
+      )}
     </div>
   );
 };
