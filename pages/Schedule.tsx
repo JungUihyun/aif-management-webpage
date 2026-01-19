@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -8,14 +8,15 @@ import {
   Plus,
   X,
 } from 'lucide-react';
-import { Match, MatchStatus, UserRole } from '../types';
+import { MatchStatus, UserRole } from '../types';
 import { api } from '../services/api';
-import { useAuth } from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { useMatches } from '../hooks/useMatches';
 
 const Schedule: React.FC = () => {
   const { user } = useAuth();
+  const { matches, refetch } = useMatches();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [matches, setMatches] = useState<Match[]>([]);
   const [view, setView] = useState<'month' | 'list'>('list'); // 뷰 모드: 리스트형 vs 달력형
 
   // 모달 상태 관리
@@ -30,14 +31,6 @@ const Schedule: React.FC = () => {
   // 경기 생성 권한 확인 (임원 또는 매니저만 가능)
   const canCreateMatch =
     user?.role === UserRole.EXECUTIVE || user?.role === UserRole.MANAGER;
-
-  const loadMatches = () => {
-    api.getMatches().then(setMatches);
-  };
-
-  useEffect(() => {
-    loadMatches();
-  }, []);
 
   // 해당 월의 총 일수 계산 (마지막 날짜)
   const getDaysInMonth = (date: Date) => {
@@ -121,7 +114,7 @@ const Schedule: React.FC = () => {
 
     setIsModalOpen(false);
     setNewMatch({ date: '', time: '', opponent: '', location: '' }); // 폼 초기화
-    loadMatches(); // 목록 새로고침
+    refetch(); // 목록 새로고침
   };
 
   return (

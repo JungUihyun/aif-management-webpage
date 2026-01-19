@@ -10,7 +10,7 @@ import {
   Bell,
 } from 'lucide-react';
 import { User as UserType, UserRole } from '../types';
-import { useAuth } from '../App';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;

@@ -1,34 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Bell, ChevronRight, TrendingUp } from 'lucide-react';
-import { Match, Notice, User } from '../types';
-import { api } from '../services/api';
+import { User } from '../types';
+import { useMatches } from '../hooks/useMatches';
+import { useNotices } from '../hooks/useNotices';
 
 interface DashboardProps {
   user: User;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
-  const [notices, setNotices] = useState<Notice[]>([]);
+  const { matches } = useMatches();
+  const { notices } = useNotices();
 
-  useEffect(() => {
-    // 모든 필요 데이터를 병렬로 호출하여 로딩 시간 단축
-    const loadData = async () => {
-      const matches = await api.getMatches();
-      const allNotices = await api.getNotices();
+  // 예정된 경기만 필터링하고 날짜순으로 정렬 후 상위 3개만 추출
+  const upcomingMatches = matches
+    .filter((m) => m.status === 'UPCOMING')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 3);
 
-      // [로직] 예정된 경기만 필터링하고 날짜순으로 정렬 후 상위 3개만 추출
-      const upcoming = matches
-        .filter((m) => m.status === 'UPCOMING')
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        .slice(0, 3);
-
-      setUpcomingMatches(upcoming);
-      setNotices(allNotices.slice(0, 4)); // 공지사항은 최신 4개만 표시
-    };
-    loadData();
-  }, [user.id]);
+  // 최신 공지사항 4개만 표시
+  const recentNotices = notices.slice(0, 4);
 
   return (
     <div className="space-y-6">
@@ -116,8 +108,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
 
           <div className="grid gap-3">
-            {notices.length > 0 ? (
-              notices.map((notice) => (
+            {recentNotices.length > 0 ? (
+              recentNotices.map((notice) => (
                 <Link key={notice.id} to={`/notices?openId=${notice.id}`}>
                   <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-primary transition-colors">
                     <div className="flex items-start justify-between">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Bell,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Notice, User, UserRole } from '../types';
 import { api } from '../services/api';
+import { useNotices } from '../hooks/useNotices';
 
 interface NoticesProps {
   user: User;
@@ -19,6 +20,7 @@ interface NoticesProps {
 const Notices: React.FC<NoticesProps> = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { notices: initialNotices, refetch } = useNotices();
   const [notices, setNotices] = useState<Notice[]>([]);
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -34,32 +36,24 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
     isImportant: 0,
   });
 
-  const loadNotices = async () => {
-    const data = await api.getNotices();
-    setNotices(data);
-    return data;
-  };
-
+  // 커스텀 훅에서 받은 데이터를 로컬 상태에 동기화
   useEffect(() => {
-    const initializeNotices = async () => {
-      const loadedNotices = await loadNotices();
+    setNotices(initialNotices);
+  }, [initialNotices]);
 
-      // URL 파라미터에서 openId 확인
-      const params = new URLSearchParams(location.search);
-      const openId = params.get('openId');
+  // URL 파라미터로 특정 공지 오픈
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const openId = params.get('openId');
 
-      if (openId && loadedNotices) {
-        const notice = loadedNotices.find((n) => n.id === openId);
-        if (notice) {
-          viewNotice(notice);
-          // URL에서 openId 파라미터 제거 (깔끔한 URL 유지)
-          navigate('/notices', { replace: true });
-        }
+    if (openId && notices.length > 0) {
+      const notice = notices.find((n) => n.id === openId);
+      if (notice) {
+        viewNotice(notice);
+        navigate('/notices', { replace: true });
       }
-    };
-
-    initializeNotices();
-  }, []);
+    }
+  }, [location.search, notices]);
 
   // 공지사항 작성 모달 열기
   const openCreateModal = () => {
@@ -115,7 +109,7 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
             setSelectedNotice(updatedNotice);
           }
           setIsEditMode(false);
-          await loadNotices();
+          await refetch().then((data) => setNotices(data || []));
         }
       } else {
         // 작성
@@ -129,7 +123,7 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
         if (success) {
           alert('공지사항이 작성되었습니다!');
           setIsEditMode(false);
-          await loadNotices();
+          await refetch().then((data) => setNotices(data || []));
         }
       }
 
@@ -155,7 +149,7 @@ const Notices: React.FC<NoticesProps> = ({ user }) => {
       setIsDeleteModalOpen(false);
       setNoticeToDelete(null);
       setSelectedNotice(null);
-      await loadNotices();
+      await refetch().then((data) => setNotices(data || []));
     } else {
       alert('공지사항 삭제에 실패했습니다.');
     }

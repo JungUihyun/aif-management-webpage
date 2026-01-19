@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { User, UserRole } from '../types';
+import React, { useState } from 'react';
+import { UserRole } from '../types';
 import { api } from '../services/api';
 import { getUserRoleLabel } from '../utils/formatters';
-import { Users, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Users } from 'lucide-react';
+import { useUsers } from '../hooks/useUsers';
 
 const Admin: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    api.getUsers().then(setUsers);
-  }, []);
+  const { users: allUsers, refetch } = useUsers();
+  const [users, setUsers] = useState(allUsers);
 
   // 유저 권한 변경 핸들러 (임원/매니저/멤버)
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
@@ -22,8 +19,8 @@ const Admin: React.FC = () => {
         )}'로 변경하시겠습니까?`
       )
     ) {
-      // 취소 시 UI를 원래대로 되돌리기 위해 다시 로드 (혹은 로컬 state rollback)
-      api.getUsers().then(setUsers);
+      // 취소 시 UI를 원래대로 되돌리기 위해 다시 로드
+      refetch().then((data) => setUsers(data || []));
       return;
     }
 
@@ -56,15 +53,6 @@ const Admin: React.FC = () => {
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  };
-
-  // 카카오뱅크 입금 내역 동기화 시뮬레이션
-  const handleBankSync = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      alert('카카오뱅크 거래내역이 성공적으로 업데이트되었습니다.');
-    }, 1500);
   };
 
   return (
