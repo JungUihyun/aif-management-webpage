@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { User, UserStats } from '../types';
 import { api } from '../services/api';
 import { getUserRoleLabel } from '../utils/formatters';
+import { getCurrentYear } from '../utils/date';
 import {
   BarChart,
   Bar,
@@ -22,7 +23,7 @@ interface MyPageProps {
 
 const MyPage: React.FC<MyPageProps> = ({ user }) => {
   const [stats, setStats] = useState<UserStats | null>(null);
-  const currentYear = new Date().getFullYear();
+  const currentYear = getCurrentYear();
 
   useEffect(() => {
     // 유저 ID를 기반으로 통계 데이터 호출
