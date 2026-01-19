@@ -13,9 +13,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const { matches } = useMatches();
   const { notices } = useNotices();
 
-  // 예정된 경기만 필터링하고 날짜순으로 정렬 후 상위 3개만 추출
+  // 현재 시간 이후의 경기만 필터링하고 날짜순으로 정렬 후 상위 3개만 추출
+  const now = new Date();
   const upcomingMatches = matches
-    .filter((m) => m.status === 'UPCOMING')
+    .filter((m) => {
+      // 경기 날짜와 시간을 조합하여 Date 객체 생성
+      const matchDateTime = new Date(`${m.date}T${m.time || '00:00'}:00`);
+      // 현재 시간 이후의 경기만 표시
+      return matchDateTime > now;
+    })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 3);
 
@@ -68,6 +74,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                         <span className="text-sm font-medium text-gray-600">
                           {match.time}
                         </span>
+                        {/* 취소된 경기만 표시 */}
+                        {match.status === 'CANCELLED' && (
+                          <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded">
+                            취소됨
+                          </span>
+                        )}
                       </div>
                       <div className="text-gray-900 font-medium">
                         <span className="text-gray-500 text-sm mr-2">

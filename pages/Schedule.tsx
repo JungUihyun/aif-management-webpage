@@ -107,9 +107,6 @@ const Schedule: React.FC = () => {
       time: newMatch.time,
       opponent: newMatch.opponent,
       location: newMatch.location,
-      score: undefined,
-      formation: undefined,
-      lineup: undefined,
     });
 
     setIsModalOpen(false);
