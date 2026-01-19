@@ -219,7 +219,7 @@ const Schedule: React.FC = () => {
                     className={`bg-white p-5 rounded-xl shadow-sm border transition-all group ${matchResultClass}`}
                   >
                     <div className="flex justify-between items-start">
-                      <div className="flex items-center space-x-3 flex-1">
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
                         <div className="flex flex-col items-center bg-gray-50 p-2 rounded-lg min-w-[60px]">
                           <span className="text-xs text-gray-500">
                             {match.date.split('-')[1]}월
@@ -232,7 +232,7 @@ const Schedule: React.FC = () => {
                         {/* 스코어 표시 - 날짜 옆에 작게 */}
                         {match.status === MatchStatus.COMPLETED &&
                           match.score && (
-                            <div className="flex items-center px-3 py-1 rounded-lg border border-black/30">
+                            <div className="flex items-center px-3 py-1 rounded-lg border border-black/30 flex-shrink-0">
                               <span className="text-lg font-bold text-primary font-mono">
                                 {match.score.us}
                               </span>
@@ -245,9 +245,9 @@ const Schedule: React.FC = () => {
                             </div>
                           )}
 
-                        <div>
-                          <h3 className="font-bold text-lg text-gray-800 group-hover:transition-colors">
-                            vs {match.opponent}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold text-lg text-gray-800 group-hover:transition-colors truncate">
+                            FC AIF vs {match.opponent}
                           </h3>
                           <div className="flex items-center text-sm text-gray-500 mt-1 space-x-3">
                             <span className="flex items-center">
