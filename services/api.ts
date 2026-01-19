@@ -235,18 +235,29 @@ export const api = {
 
   // 유저 개인 통계 조회 (마이페이지용)
   getUserStats: async (userId: string): Promise<UserStats> => {
-    // users 테이블에서 경기 수 가져오기
-    const { data, error } = await supabase
-      .from('users')
-      .select('matches')
-      .eq('id', userId)
-      .single();
+    // 현재 연도의 시작일과 종료일 계산
+    const currentYear = new Date().getFullYear();
+    const yearStart = `${currentYear}-01-01`;
+    const yearEnd = `${currentYear}-12-31`;
 
-    if (error) {
-      console.error('유저 통계 조회 오류:', error);
+    // 올해 경기 중 해당 유저가 참가한 경기 수 카운트
+    const { data: participantData, error: participantError } = await supabase
+      .from('match_participants')
+      .select('match_id, matches(date)')
+      .eq('user_id', userId);
+
+    if (participantError) {
+      console.error('유저 경기 참가 기록 조회 오류:', participantError);
     }
 
-    const matchesPlayed = data?.matches || 0;
+    // 올해 경기만 필터링
+    const thisYearMatches =
+      participantData?.filter((item: any) => {
+        const matchDate = item.matches?.date;
+        return matchDate && matchDate >= yearStart && matchDate <= yearEnd;
+      }) || [];
+
+    const matchesPlayed = thisYearMatches.length;
 
     // 골, 어시스트 등은 아직 DB 테이블이 없으므로 기본값 반환
     // 추후 'stats' 테이블이 생기면 supabase 로직으로 교체 필요

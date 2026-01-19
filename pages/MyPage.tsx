@@ -22,6 +22,7 @@ interface MyPageProps {
 
 const MyPage: React.FC<MyPageProps> = ({ user }) => {
   const [stats, setStats] = useState<UserStats | null>(null);
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     // 유저 ID를 기반으로 통계 데이터 호출
@@ -117,9 +118,11 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
             </div>
             <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
               <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">
-                총 경기수
+                {currentYear} 시즌 총 경기수
               </p>
-              <p className="font-bold text-primary text-sm">{user.matches}회</p>
+              <p className="font-bold text-primary text-sm">
+                {stats?.matchesPlayed ?? 0}회
+              </p>
             </div>
           </div>
         </div>
