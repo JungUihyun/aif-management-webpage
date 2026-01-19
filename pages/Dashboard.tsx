@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Bell, ChevronRight, TrendingUp } from 'lucide-react';
-import { User } from '../types';
+import { User, MatchStatus } from '../types';
 import { useMatches } from '../hooks/useMatches';
 import { useNotices } from '../hooks/useNotices';
 
@@ -13,16 +13,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const { matches } = useMatches();
   const { notices } = useNotices();
 
-  // 현재 시간 이후의 경기만 필터링하고 날짜순으로 정렬 후 상위 3개만 추출
+  // 최근 경기: 지난 1주일 종료 경기 + 앞으로의 경기
   const now = new Date();
-  const upcomingMatches = matches
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(now.getDate() - 7);
+
+  const recentMatches = matches
     .filter((m) => {
-      // 경기 날짜와 시간을 조합하여 Date 객체 생성
       const matchDateTime = new Date(`${m.date}T${m.time || '00:00'}:00`);
-      // 현재 시간 이후의 경기만 표시
-      return matchDateTime > now;
+      // 지난 1주일 이내의 종료된 경기 또는 미래 경기
+      return (
+        (m.status === MatchStatus.COMPLETED && matchDateTime >= oneWeekAgo) ||
+        matchDateTime > now
+      );
     })
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // 최신순
     .slice(0, 3);
 
   // 최신 공지사항 4개만 표시
@@ -51,7 +56,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           <div className="flex justify-between items-center">
             <h3 className="font-bold text-lg text-gray-800 flex items-center">
               <Calendar className="mr-2 text-primary" size={20} />
-              다가오는 경기
+              최근 경기
             </h3>
             <Link
               to="/schedule"
@@ -62,8 +67,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
 
           <div className="grid gap-3">
-            {upcomingMatches.length > 0 ? (
-              upcomingMatches.map((match) => (
+            {recentMatches.length > 0 ? (
+              recentMatches.map((match) => (
                 <Link key={match.id} to={`/match/${match.id}`}>
                   <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-primary transition-colors flex justify-between items-center">
                     <div>
@@ -74,17 +79,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                         <span className="text-sm font-medium text-gray-600">
                           {match.time}
                         </span>
-                        {/* 취소된 경기만 표시 */}
-                        {match.status === 'CANCELLED' && (
+                        {/* 경기 상태 표시 */}
+                        {match.status === MatchStatus.COMPLETED && (
+                          <span className="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">
+                            종료
+                          </span>
+                        )}
+                        {match.status === MatchStatus.CANCELLED && (
                           <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded">
                             취소됨
                           </span>
                         )}
                       </div>
                       <div className="text-gray-900 font-medium">
-                        <span className="text-gray-500 text-sm mr-2">
-                          {match.location}
-                        </span>
+                        FC AIF vs {match.opponent}
+                      </div>
+                      {/* 종료된 경기는 스코어 표시 */}
+                      {match.status === MatchStatus.COMPLETED &&
+                        match.score && (
+                          <div className="text-sm font-bold text-primary mt-1">
+                            {match.score.us} : {match.score.opponent}
+                          </div>
+                        )}
+                      <div className="text-gray-500 text-sm">
+                        {match.location}
                       </div>
                     </div>
                     <div className="flex flex-col items-end">
@@ -98,7 +116,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               ))
             ) : (
               <div className="bg-white p-6 rounded-xl text-center text-gray-500 shadow-sm">
-                예정된 경기가 없습니다.
+                최근 경기가 없습니다.
               </div>
             )}
           </div>
