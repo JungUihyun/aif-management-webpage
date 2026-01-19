@@ -181,7 +181,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               {recentNotices.map((notice) => (
                 <Link
                   key={notice.id}
-                  to={`/notices/${notice.id}`}
+                  to={`/notices?openId=${notice.id}`}
                   className="block"
                 >
                   <div className="border-b border-gray-100 pb-3 hover:bg-gray-50 transition-colors rounded p-2">
