@@ -129,95 +129,112 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* 개인 기록 막대 그래프 (Recharts 사용) */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="font-bold text-gray-800 mb-4 flex items-center">
-            <Activity size={20} className="mr-2 text-primary" />
-            개인 기록 요약
-          </h3>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#f0f0f0"
-                />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
-                  dy={10}
-                />
-                <YAxis hide />
-                <Tooltip
-                  cursor={{ fill: '#f0fdf4' }}
-                  contentStyle={{
-                    borderRadius: '8px',
-                    border: 'none',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  }}
-                />
-                <Bar
-                  dataKey="value"
-                  fill="#036b3f"
-                  radius={[4, 4, 0, 0]}
-                  barSize={40}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+      {/* 경기 기록이 있을 때만 차트 표시 */}
+      {stats && stats.matchesPlayed > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 개인 기록 막대 그래프 (Recharts 사용) */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+              <Activity size={20} className="mr-2 text-primary" />
+              개인 기록 요약
+            </h3>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%" minHeight={256}>
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f0f0f0"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    dy={10}
+                  />
+                  <YAxis hide />
+                  <Tooltip
+                    cursor={{ fill: '#f0fdf4' }}
+                    contentStyle={{
+                      borderRadius: '8px',
+                      border: 'none',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    }}
+                  />
+                  <Bar
+                    dataKey="value"
+                    fill="#036b3f"
+                    radius={[4, 4, 0, 0]}
+                    barSize={40}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* 참석률 도넛 차트 */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+              <Calendar size={20} className="mr-2 text-primary" />
+              시즌 참석률
+            </h3>
+            <div className="flex-1 flex flex-col justify-center items-center">
+              <div className="relative w-48 h-48">
+                <ResponsiveContainer width="100%" height="100%" minHeight={192}>
+                  <PieChart>
+                    <Pie
+                      data={donutData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      startAngle={90}
+                      endAngle={-270}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {donutData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* 차트 중앙 텍스트 오버레이 */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-4xl font-bold text-gray-800">
+                    {stats?.attendanceRate}%
+                  </span>
+                  <span className="text-sm text-gray-400 mt-1">Excellent!</span>
+                </div>
+              </div>
+              <p className="text-sm text-center text-gray-500 mt-4">
+                최근 3개월 간의 경기 및 훈련 참석률입니다.
+              </p>
+            </div>
           </div>
         </div>
-
-        {/* 참석률 도넛 차트 */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-          <h3 className="font-bold text-gray-800 mb-4 flex items-center">
-            <Calendar size={20} className="mr-2 text-primary" />
-            시즌 참석률
-          </h3>
-          <div className="flex-1 flex flex-col justify-center items-center">
-            <div className="relative w-48 h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={donutData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    startAngle={90}
-                    endAngle={-270}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {donutData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              {/* 차트 중앙 텍스트 오버레이 */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-4xl font-bold text-gray-800">
-                  {stats?.attendanceRate}%
-                </span>
-                <span className="text-sm text-gray-400 mt-1">Excellent!</span>
-              </div>
+      ) : (
+        <div className="bg-white p-12 rounded-xl shadow-sm border border-gray-100 text-center">
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Trophy size={32} className="text-gray-400" />
             </div>
-            <p className="text-sm text-center text-gray-500 mt-4">
-              최근 3개월 간의 경기 및 훈련 참석률입니다.
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              아직 경기 기록이 없습니다
+            </h3>
+            <p className="text-gray-500 mb-6">
+              첫 경기에 참가하면 개인 기록과 통계를 확인할 수 있습니다.
             </p>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
