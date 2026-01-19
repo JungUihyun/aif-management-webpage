@@ -269,13 +269,65 @@ export const api = {
 
     const matchesPlayed = thisYearMatches.length;
 
-    // 골, 어시스트 등은 아직 DB 테이블이 없으므로 기본값 반환
-    // 추후 'stats' 테이블이 생기면 supabase 로직으로 교체 필요
+    // 득점 수 조회 (match_goals 테이블에서 scorer_id가 userId인 것)
+    const { data: goalsData, error: goalsError } = await supabase
+      .from('match_goals')
+      .select('id, matches(date)')
+      .eq('scorer_id', userId);
+
+    if (goalsError) {
+      console.error('득점 기록 조회 오류:', goalsError);
+    }
+
+    // 올해 득점만 필터링
+    const thisYearGoals =
+      goalsData?.filter((goal: any) => {
+        const matchDate = goal.matches?.date;
+        return matchDate && matchDate >= yearStart && matchDate <= yearEnd;
+      }) || [];
+
+    const goals = thisYearGoals.length;
+
+    // 어시스트 수 조회 (match_goals 테이블에서 assist_id가 userId인 것)
+    const { data: assistsData, error: assistsError } = await supabase
+      .from('match_goals')
+      .select('id, matches(date)')
+      .eq('assist_id', userId);
+
+    if (assistsError) {
+      console.error('어시스트 기록 조회 오류:', assistsError);
+    }
+
+    // 올해 어시스트만 필터링
+    const thisYearAssists =
+      assistsData?.filter((assist: any) => {
+        const matchDate = assist.matches?.date;
+        return matchDate && matchDate >= yearStart && matchDate <= yearEnd;
+      }) || [];
+
+    const assists = thisYearAssists.length;
+
+    // 참석률 계산 (2026년 기준)
+    // 올해 전체 경기 수 조회
+    const { data: allMatchesData, error: allMatchesError } = await supabase
+      .from('matches')
+      .select('id')
+      .gte('date', yearStart)
+      .lte('date', yearEnd);
+
+    if (allMatchesError) {
+      console.error('전체 경기 조회 오류:', allMatchesError);
+    }
+
+    const totalMatches = allMatchesData?.length || 0;
+    const attendanceRate =
+      totalMatches > 0 ? Math.round((matchesPlayed / totalMatches) * 100) : 0;
+
     return {
       matchesPlayed: matchesPlayed,
-      goals: 0,
-      assists: 0,
-      attendanceRate: 0,
+      goals: goals,
+      assists: assists,
+      attendanceRate: attendanceRate,
     };
   },
 

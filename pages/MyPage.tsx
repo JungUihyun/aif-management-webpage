@@ -187,14 +187,14 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                       />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-5xl font-bold text-gray-800">
+                      <span className="text-3xl font-bold text-gray-800">
                         {stats.attendanceRate}%
                       </span>
                     </div>
                   </div>
                 </div>
                 <p className="text-sm text-gray-500 mt-4">
-                  최근 3개월 간의 경기 및 훈련 참석률입니다.
+                  이번 시즌의 경기 및 훈련 참석률입니다.
                 </p>
                 <div className="mt-4 inline-block px-4 py-2 bg-primary/10 rounded-full">
                   <span className="text-sm font-bold text-primary">
