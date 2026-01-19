@@ -268,6 +268,24 @@ export const api = {
       attendanceRate: 0,
     };
   },
+
+  // 경기 상태 업데이트 (임원/매니저 전용)
+  updateMatchStatus: async (
+    matchId: string,
+    newStatus: MatchStatus
+  ): Promise<boolean> => {
+    const { error } = await supabase
+      .from('matches')
+      .update({ status: newStatus })
+      .eq('id', matchId);
+
+    if (error) {
+      console.error('경기 상태 업데이트 오류:', error);
+      return false;
+    }
+
+    return true;
+  },
 };
 
 // --- 이메일 인증 API ---

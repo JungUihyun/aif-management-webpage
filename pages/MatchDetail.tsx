@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, Users, ArrowLeft, Shield, Edit2 } from 'lucide-react';
+import {
+  MapPin,
+  Clock,
+  Users,
+  ArrowLeft,
+  Shield,
+  Edit2,
+  ChevronDown,
+} from 'lucide-react';
 import { Match, MatchStatus, User, UserRole } from '../types';
 import { api } from '../services/api';
 
@@ -15,6 +23,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
   const [match, setMatch] = useState<Match | null>(null);
   const [isEditing, setIsEditing] = useState(false); // 수정 모드 (UI만 구현됨)
   const [isJoined, setIsJoined] = useState(false); // 현재 유저의 참여 여부
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false); // 상태 업데이트 중
 
   useEffect(() => {
     if (id) {
@@ -31,6 +40,22 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
   const handleToggleJoin = () => {
     // 실제 앱에서는 API를 호출하여 참여 상태를 DB에 업데이트해야 함
     setIsJoined(!isJoined);
+  };
+
+  // 경기 상태 변경 핸들러 (임원/매니저만 사용)
+  const handleStatusChange = async (newStatus: MatchStatus) => {
+    if (!match || !id) return;
+
+    setIsUpdatingStatus(true);
+    const success = await api.updateMatchStatus(id, newStatus);
+
+    if (success) {
+      // 로컬 상태 업데이트
+      setMatch({ ...match, status: newStatus });
+    } else {
+      alert('경기 상태 변경에 실패했습니다.');
+    }
+    setIsUpdatingStatus(false);
   };
 
   // 관리자 권한 확인 (수정 버튼 표시용)
@@ -52,11 +77,41 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
         {/* 경기 헤더 섹션 (스코어 및 기본 정보) */}
         <div className="bg-primary p-6 text-white">
           <div className="flex justify-between items-start mb-4">
-            <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
-              {match.status === MatchStatus.UPCOMING
-                ? '경기 예정'
-                : '경기 종료'}
-            </span>
+            {/* 상태 표시 - 관리자는 드롭다운, 일반 유저는 뱃지만 */}
+            {canEdit ? (
+              <div className="relative inline-block">
+                <select
+                  value={match.status}
+                  onChange={(e) =>
+                    handleStatusChange(e.target.value as MatchStatus)
+                  }
+                  disabled={isUpdatingStatus}
+                  className="bg-white/20 px-3 py-1 pr-8 rounded-full text-xs font-medium backdrop-blur-sm appearance-none cursor-pointer hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value={MatchStatus.UPCOMING} className="bg-gray-800">
+                    경기 예정
+                  </option>
+                  <option value={MatchStatus.COMPLETED} className="bg-gray-800">
+                    경기 종료
+                  </option>
+                  <option value={MatchStatus.CANCELLED} className="bg-gray-800">
+                    경기 취소
+                  </option>
+                </select>
+                <ChevronDown
+                  size={12}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                />
+              </div>
+            ) : (
+              <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
+                {match.status === MatchStatus.UPCOMING
+                  ? '경기 예정'
+                  : match.status === MatchStatus.COMPLETED
+                    ? '경기 종료'
+                    : '경기 취소'}
+              </span>
+            )}
             {/* 관리자에게만 수정 버튼 표시 */}
             {canEdit && (
               <button
