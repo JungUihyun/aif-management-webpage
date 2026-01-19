@@ -7,7 +7,6 @@ import {
   UserStats,
 } from '../types';
 import { supabase } from './supabase';
-import bcrypt from 'bcryptjs';
 
 /**
  * 이 파일은 백엔드 API와 데이터베이스를 처리하는 서비스 레이어입니다.
@@ -58,24 +57,6 @@ const mapNoticeFromDB = (dbNotice: any): Notice => {
 
 // --- API 로직 ---
 export const api = {
-  // 레거시 로그인 (기존 사용자용 - auth_user_id가 null인 경우)
-  legacyLogin: async (id: string, password: string): Promise<User | null> => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error || !data) {
-      return null;
-    }
-
-    // 비밀번호 검증
-    const isMatch = await bcrypt.compare(password, data.password);
-    if (!isMatch) return null;
-
-    return mapUserFromDB(data);
-  },
   // 경기 목록 조회
   getMatches: async (): Promise<Match[]> => {
     const { data, error } = await supabase
@@ -254,11 +235,20 @@ export const api = {
 
   // 유저 개인 통계 조회 (마이페이지용)
   getUserStats: async (userId: string): Promise<UserStats> => {
-    // 1. 유저 정보에서 경기 수 가져오기
-    const user = await api.legacyLogin(userId, '');
-    const matchesPlayed = user?.matches || 0;
+    // users 테이블에서 경기 수 가져오기
+    const { data, error } = await supabase
+      .from('users')
+      .select('matches')
+      .eq('id', userId)
+      .single();
 
-    // 2. 골, 어시스트 등은 아직 DB 테이블이 없으므로 기본값 반환
+    if (error) {
+      console.error('유저 통계 조회 오류:', error);
+    }
+
+    const matchesPlayed = data?.matches || 0;
+
+    // 골, 어시스트 등은 아직 DB 테이블이 없으므로 기본값 반환
     // 추후 'stats' 테이블이 생기면 supabase 로직으로 교체 필요
     return {
       matchesPlayed: matchesPlayed,

@@ -66,38 +66,18 @@ export const authService = {
 
   /**
    * 로그인: 학번 입력 -> JWT 토큰 발급
-   * 하이브리드 인증: Supabase Auth 우선, 실패 시 레거시 bcrypt 방식 폴백
    */
   signIn: async (studentId: string, password: string) => {
-    try {
-      // 1차 시도: Supabase Auth (새 사용자용)
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: studentIdToEmail(studentId),
-        password: password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: studentIdToEmail(studentId),
+      password: password,
+    });
 
-      if (!error && data.user) {
-        return data.user;
-      }
-
-      // 2차 시도: 레거시 로그인 (기존 사용자용)
-      const { api } = await import('./api');
-      const legacyUser = await api.legacyLogin(studentId, password);
-
-      if (!legacyUser) {
-        throw new Error('학번 또는 비밀번호가 올바르지 않습니다.');
-      }
-
-      console.warn(
-        '[Auth] 레거시 사용자 로그인 성공. Supabase Auth로 마이그레이션을 권장합니다.'
-      );
-
-      // 레거시 사용자 정보 반환
-      return { id: legacyUser.id, email: legacyUser.email || '' };
-    } catch (error) {
-      console.error('[Auth] 로그인 오류:', error);
-      throw error;
+    if (error || !data.user) {
+      throw new Error('학번 또는 비밀번호가 올바르지 않습니다.');
     }
+
+    return data.user;
   },
 
   /**

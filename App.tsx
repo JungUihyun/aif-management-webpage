@@ -121,40 +121,9 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = async (id: string, password?: string) => {
     setIsLoading(true);
     try {
-      const authUser = await authService.signIn(id, password!);
-
-      // JWT 사용자인지 레거시 사용자인지 확인
-      if (authUser && 'aud' in authUser) {
-        // JWT 사용자
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
-      } else {
-        // 레거시 사용자: DB에서 직접 조회
-        const { data } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (data) {
-          setUser({
-            id: data.id,
-            email: data.email || '',
-            name: data.name,
-            shortName: data.short_name,
-            birth: data.birth,
-            gender: data.gender,
-            position: data.position,
-            backNumber: data.back_number,
-            role: data.role,
-            matches: data.matches,
-            avatarUrl: data.avatar_url,
-            joinedAt: data.joined_at,
-            password: '',
-          });
-        }
-      }
-
+      await authService.signIn(id, password!);
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
       setIsLoading(false);
       return true;
     } catch (error) {
