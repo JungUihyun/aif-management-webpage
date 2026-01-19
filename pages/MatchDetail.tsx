@@ -215,44 +215,46 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
 
         {/* 하단 컨텐츠 (라인업 및 명단) */}
         <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* 왼쪽: 라인업 시각화 */}
-          <div>
-            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-              <Shield size={20} className="mr-2 text-primary" />
-              선발 라인업 (포메이션: {match.formation || '미정'})
-            </h3>
+          {/* 왼쪽: 라인업 시각화 - 포메이션이 있을 때만 표시 */}
+          {match.formation && match.formation !== '미정' && (
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                <Shield size={20} className="mr-2 text-primary" />
+                선발 라인업 (포메이션: {match.formation})
+              </h3>
 
-            {/* 축구장 그래픽 구현 */}
-            <div className="relative w-full aspect-[2/3] bg-green-600 rounded-lg border-2 border-white/20 shadow-inner overflow-hidden p-4">
-              {/* 경기장 라인 드로잉 */}
-              <div className="absolute top-0 left-1/4 right-1/4 h-16 border-b-2 border-l-2 border-r-2 border-white/30 rounded-b-lg"></div>
-              <div className="absolute bottom-0 left-1/4 right-1/4 h-16 border-t-2 border-l-2 border-r-2 border-white/30 rounded-t-lg"></div>
-              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/30 -translate-y-1/2"></div>
-              <div className="absolute top-1/2 left-1/2 w-24 h-24 border-2 border-white/30 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+              {/* 축구장 그래픽 구현 */}
+              <div className="relative w-full aspect-[2/3] bg-green-600 rounded-lg border-2 border-white/20 shadow-inner overflow-hidden p-4">
+                {/* 경기장 라인 드로잉 */}
+                <div className="absolute top-0 left-1/4 right-1/4 h-16 border-b-2 border-l-2 border-r-2 border-white/30 rounded-b-lg"></div>
+                <div className="absolute bottom-0 left-1/4 right-1/4 h-16 border-t-2 border-l-2 border-r-2 border-white/30 rounded-t-lg"></div>
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/30 -translate-y-1/2"></div>
+                <div className="absolute top-1/2 left-1/2 w-24 h-24 border-2 border-white/30 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
 
-              {/* 선수 배치 (Mock 데이터를 기반으로 위치 계산) */}
-              {match.lineup ? (
-                Object.entries(match.lineup).map(([pos, userId]) => (
-                  <div
-                    key={pos}
-                    className="absolute flex flex-col items-center justify-center transform -translate-x-1/2 -translate-y-1/2"
-                    style={{
-                      top: getPosCoords(pos).top, // 포지션별 % 좌표
-                      left: getPosCoords(pos).left,
-                    }}
-                  >
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center font-bold text-primary text-xs shadow-md z-10">
-                      {pos}
+                {/* 선수 배치 (Mock 데이터를 기반으로 위치 계산) */}
+                {match.lineup ? (
+                  Object.entries(match.lineup).map(([pos, userId]) => (
+                    <div
+                      key={pos}
+                      className="absolute flex flex-col items-center justify-center transform -translate-x-1/2 -translate-y-1/2"
+                      style={{
+                        top: getPosCoords(pos).top, // 포지션별 % 좌표
+                        left: getPosCoords(pos).left,
+                      }}
+                    >
+                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center font-bold text-primary text-xs shadow-md z-10">
+                        {pos}
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-white/50">
+                    라인업이 아직 등록되지 않았습니다.
                   </div>
-                ))
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-white/50">
-                  라인업이 아직 등록되지 않았습니다.
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 오른쪽: 참여 명단 리스트 */}
           <div>
