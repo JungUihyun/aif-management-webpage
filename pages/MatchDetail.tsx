@@ -178,9 +178,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
                 </div>
               )}
 
-              <h1 className="text-3xl font-bold mb-2">
-                FC AIF vs {match.opponent}
-              </h1>
+              <h1 className="text-3xl font-bold mb-2">{match.opponent}</h1>
               <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 text-white/80">
                 <span className="flex items-center">
                   <Clock size={16} className="mr-1" /> {match.date} {match.time}

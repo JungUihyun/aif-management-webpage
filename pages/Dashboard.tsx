@@ -81,7 +81,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                           </span>
                         </div>
                         <div className="text-gray-900 font-medium">
-                          FC AIF vs {match.opponent}
+                          {match.opponent}
                         </div>
                         {match.score && (
                           <div className="text-sm font-bold text-primary mt-1">
@@ -138,7 +138,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                           )}
                         </div>
                         <div className="text-gray-900 font-medium">
-                          FC AIF vs {match.opponent}
+                          {match.opponent}
                         </div>
                         <div className="text-gray-500 text-sm">
                           {match.location}

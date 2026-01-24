@@ -247,7 +247,7 @@ const Schedule: React.FC = () => {
 
                         <div className="min-w-0 flex-1">
                           <h3 className="font-bold text-lg text-gray-800 group-hover:transition-colors truncate">
-                            FC AIF vs {match.opponent}
+                            {match.opponent}
                           </h3>
                           <div className="flex items-center text-sm text-gray-500 mt-1 space-x-3">
                             <span className="flex items-center">
