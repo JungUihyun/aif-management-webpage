@@ -12,6 +12,7 @@ import {
 import { Match, MatchStatus, User, UserRole, Goal } from '../types';
 import { api } from '../services/api';
 import MatchEditModal from '../components/MatchEditModal';
+import { getFormationLines } from '../utils/formation';
 
 interface MatchDetailProps {
   user: User;
@@ -235,24 +236,33 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
                     </div> */}
 
                     {/* 해당 라인의 포지션들을 가로로 배치 */}
-                    <div className="flex justify-around items-start px-4">
+                    <div className="flex justify-around items-start px-2 gap-1">
                       {line.positions.map((position) => {
                         const playerId = match.lineup?.[position];
                         const player = playerId
                           ? match.participants.find((p) => p.id === playerId)
                           : null;
 
+                        // 포지션 개수에 따라 동적으로 너비 조정
+                        const positionCount = line.positions.length;
+                        const widthClass =
+                          positionCount >= 5
+                            ? 'w-14' // 5개 이상: 56px
+                            : positionCount === 4
+                              ? 'w-16' // 4개: 64px
+                              : 'w-20'; // 3개 이하: 80px
+
                         return (
                           <div
                             key={position}
-                            className="flex flex-col items-center w-20"
+                            className={`flex flex-col items-center ${widthClass}`}
                           >
-                            <div className="text-xs font-bold text-white mb-1.5 text-center">
+                            <div className="text-[10px] font-bold text-white mb-1 text-center">
                               {position}
                             </div>
-                            <div className="w-full bg-white/10 border-2 border-white/30 text-white rounded-lg px-2 py-2 text-center text-sm font-medium backdrop-blur-sm min-h-[2.5rem] flex items-center justify-center">
+                            <div className="w-full bg-white/10 border-2 border-white/30 text-white rounded-lg px-1 py-1.5 text-center text-[10px] font-medium backdrop-blur-sm min-h-[2rem] flex items-center justify-center">
                               {player ? (
-                                <span className="truncate w-full">
+                                <span className="truncate w-full text-[10px]">
                                   {player.name}
                                 </span>
                               ) : (
@@ -327,45 +337,6 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
       )}
     </div>
   );
-};
-
-// 포메이션별 라인 구성 반환
-const getFormationLines = (
-  formationStr: string
-): { label: string; positions: string[] }[] => {
-  switch (formationStr) {
-    case '4-3-3':
-      return [
-        { label: '공격', positions: ['LW', 'ST', 'RW'] },
-        { label: '미드필더', positions: ['CM1', 'DM', 'CM2'] },
-        { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
-        { label: '골키퍼', positions: ['GK'] },
-      ];
-    case '4-4-2':
-      return [
-        { label: '공격', positions: ['ST1', 'ST2'] },
-        { label: '미드필더', positions: ['LM', 'CM1', 'CM2', 'RM'] },
-        { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
-        { label: '골키퍼', positions: ['GK'] },
-      ];
-    case '3-5-2':
-      return [
-        { label: '공격', positions: ['ST1', 'ST2'] },
-        { label: '미드필더', positions: ['LWB', 'LM', 'CM', 'RM', 'RWB'] },
-        { label: '수비', positions: ['CB1', 'CB2', 'CB3'] },
-        { label: '골키퍼', positions: ['GK'] },
-      ];
-    case '4-2-3-1':
-      return [
-        { label: '공격', positions: ['ST'] },
-        { label: '공격형 미드필더', positions: ['LW', 'CAM', 'RW'] },
-        { label: '수비형 미드필더', positions: ['DM1', 'DM2'] },
-        { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
-        { label: '골키퍼', positions: ['GK'] },
-      ];
-    default:
-      return [];
-  }
 };
 
 export default MatchDetail;

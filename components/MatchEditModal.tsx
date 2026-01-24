@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { Match, User, Goal } from '../types';
 import { api } from '../services/api';
+import {
+  getFormationLines,
+  getPositionsForFormation,
+} from '../utils/formation';
 
 interface MatchEditModalProps {
   match: Match;
@@ -119,109 +123,6 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
     if (userId === 'guest') return '용병';
     const user = allUsers.find((u) => u.id === userId);
     return user ? user.name : userId;
-  };
-
-  // 포메이션별 포지션 목록 반환
-  const getPositionsForFormation = (formationStr: string): string[] => {
-    switch (formationStr) {
-      case '4-3-3':
-        return [
-          'GK',
-          'LB',
-          'CB1',
-          'CB2',
-          'RB',
-          'CM1',
-          'DM',
-          'CM2',
-          'LW',
-          'ST',
-          'RW',
-        ];
-      case '4-4-2':
-        return [
-          'GK',
-          'LB',
-          'CB',
-          'CB',
-          'RB',
-          'LM',
-          'CM',
-          'CM',
-          'RM',
-          'ST',
-          'ST',
-        ];
-      case '3-5-2':
-        return [
-          'GK',
-          'CB1',
-          'CB2',
-          'CB3',
-          'LWB',
-          'CM1',
-          'DM',
-          'CM2',
-          'RWB',
-          'ST1',
-          'ST2',
-        ];
-      case '4-2-3-1':
-        return [
-          'GK',
-          'LB',
-          'CB1',
-          'CB2',
-          'RB',
-          'DM1',
-          'DM2',
-          'LW',
-          'CAM',
-          'RW',
-          'ST',
-        ];
-      default:
-        return [];
-    }
-  };
-
-  // 포메이션별 라인 구성 반환
-  const getFormationLines = (
-    formationStr: string
-  ): { label: string; positions: string[] }[] => {
-    switch (formationStr) {
-      case '4-3-3':
-        return [
-          { label: '공격', positions: ['LW', 'ST', 'RW'] },
-          { label: '미드필더', positions: ['CM1', 'DM', 'CM2'] },
-          { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
-          { label: '골키퍼', positions: ['GK'] },
-        ];
-      case '4-4-2':
-        return [
-          { label: '공격', positions: ['ST1', 'ST2'] },
-          { label: '미드필더', positions: ['LM', 'CM1', 'CM2', 'RM'] },
-          { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
-          { label: '골키퍼', positions: ['GK'] },
-        ];
-      case '3-5-2':
-        return [
-          { label: '공격', positions: ['ST1', 'ST2'] },
-          { label: '미드필더', positions: ['LWB', 'CM1', 'DM', 'CM2', 'RWB'] },
-          { label: '수비', positions: ['CB1', 'CB2', 'CB3'] },
-          { label: '골키퍼', positions: ['GK'] },
-        ];
-      case '4-2-3-1':
-        return [
-          { label: '공격', positions: ['ST'] },
-          { label: '공격형 미드필더', positions: ['LW', 'CAM', 'RW'] },
-          { label: '수비형 미드필더', positions: ['DM1', 'DM2'] },
-          { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
-          { label: '골키퍼', positions: ['GK'] },
-        ];
-      default:
-        return [];
-    }
   };
 
   // 포메이션 변경 시 라인업 초기화
@@ -483,45 +384,56 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
                       </div>
 
                       {/* 해당 라인의 포지션들을 가로로 배치 */}
-                      <div className="flex justify-around items-start px-4">
-                        {line.positions.map((position) => (
-                          <div
-                            key={position}
-                            className="flex flex-col items-center w-20"
-                          >
-                            <div className="text-xs font-bold text-white mb-1.5 text-center">
-                              {position}
-                            </div>
-                            <select
-                              value={lineup[position] || ''}
-                              onChange={(e) =>
-                                handleLineupChange(position, e.target.value)
-                              }
-                              className="w-full border-2 border-white/30 bg-white/10 text-white rounded-lg px-2 py-2 text-sm font-medium focus:ring-2 focus:ring-white focus:border-white outline-none backdrop-blur-sm hover:bg-white/20 transition-colors"
+                      <div className="flex justify-around items-start px-2 gap-1">
+                        {line.positions.map((position) => {
+                          // 포지션 개수에 따라 동적으로 너비 조정
+                          const positionCount = line.positions.length;
+                          const widthClass =
+                            positionCount >= 5
+                              ? 'w-14' // 5개 이상: 56px
+                              : positionCount === 4
+                                ? 'w-16' // 4개: 64px
+                                : 'w-20'; // 3개 이하: 80px
+
+                          return (
+                            <div
+                              key={position}
+                              className={`flex flex-col items-center ${widthClass}`}
                             >
-                              <option value="" className="bg-gray-800">
-                                -
-                              </option>
-                              <option value="guest" className="bg-gray-800">
-                                용병
-                              </option>
-                              {selectedParticipants.map((userId) => {
-                                const user = allUsers.find(
-                                  (u) => u.id === userId
-                                );
-                                return user ? (
-                                  <option
-                                    key={user.id}
-                                    value={user.id}
-                                    className="bg-gray-800"
-                                  >
-                                    {user.name}
-                                  </option>
-                                ) : null;
-                              })}
-                            </select>
-                          </div>
-                        ))}
+                              <div className="text-[10px] font-bold text-white mb-1 text-center">
+                                {position}
+                              </div>
+                              <select
+                                value={lineup[position] || ''}
+                                onChange={(e) =>
+                                  handleLineupChange(position, e.target.value)
+                                }
+                                className="w-full border-2 border-white/30 bg-white/10 text-white rounded-lg px-1 py-1.5 text-[10px] font-medium focus:ring-2 focus:ring-white focus:border-white outline-none backdrop-blur-sm hover:bg-white/20 transition-colors"
+                              >
+                                <option value="" className="bg-gray-800">
+                                  -
+                                </option>
+                                <option value="guest" className="bg-gray-800">
+                                  용병
+                                </option>
+                                {selectedParticipants.map((userId) => {
+                                  const user = allUsers.find(
+                                    (u) => u.id === userId
+                                  );
+                                  return user ? (
+                                    <option
+                                      key={user.id}
+                                      value={user.id}
+                                      className="bg-gray-800"
+                                    >
+                                      {user.name}
+                                    </option>
+                                  ) : null;
+                                })}
+                              </select>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
