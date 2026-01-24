@@ -407,6 +407,28 @@ export const api = {
     return true;
   },
 
+  // 경기 포메이션 및 라인업 업데이트
+  updateMatchFormation: async (
+    matchId: string,
+    formation: string,
+    lineup: Record<string, string>
+  ): Promise<boolean> => {
+    const { error } = await supabase
+      .from('matches')
+      .update({
+        formation: formation,
+        lineup: lineup,
+      })
+      .eq('id', matchId);
+
+    if (error) {
+      console.error('포메이션 업데이트 오류:', error);
+      return false;
+    }
+
+    return true;
+  },
+
   // 경기별 골 목록 조회
   getMatchGoals: async (matchId: string): Promise<Goal[]> => {
     const { data, error } = await supabase

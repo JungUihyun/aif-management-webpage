@@ -223,35 +223,48 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
                 선발 라인업 (포메이션: {match.formation})
               </h3>
 
-              {/* 축구장 그래픽 구현 */}
-              <div className="relative w-full aspect-[2/3] bg-green-600 rounded-lg border-2 border-white/20 shadow-inner overflow-hidden p-4">
-                {/* 경기장 라인 드로잉 */}
-                <div className="absolute top-0 left-1/4 right-1/4 h-16 border-b-2 border-l-2 border-r-2 border-white/30 rounded-b-lg"></div>
-                <div className="absolute bottom-0 left-1/4 right-1/4 h-16 border-t-2 border-l-2 border-r-2 border-white/30 rounded-t-lg"></div>
-                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/30 -translate-y-1/2"></div>
-                <div className="absolute top-1/2 left-1/2 w-24 h-24 border-2 border-white/30 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+              {/* 라인별 포메이션 표시 */}
+              <div className="bg-gradient-to-b from-green-600 to-green-700 rounded-lg p-6 space-y-6">
+                {getFormationLines(match.formation).map((line) => (
+                  <div key={line.label} className="space-y-2">
+                    {/* 라인 레이블 */}
+                    {/* <div className="text-center">
+                      <span className="inline-block bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        {line.label}
+                      </span>
+                    </div> */}
 
-                {/* 선수 배치 (Mock 데이터를 기반으로 위치 계산) */}
-                {match.lineup ? (
-                  Object.entries(match.lineup).map(([pos, userId]) => (
-                    <div
-                      key={pos}
-                      className="absolute flex flex-col items-center justify-center transform -translate-x-1/2 -translate-y-1/2"
-                      style={{
-                        top: getPosCoords(pos).top, // 포지션별 % 좌표
-                        left: getPosCoords(pos).left,
-                      }}
-                    >
-                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center font-bold text-primary text-xs shadow-md z-10">
-                        {pos}
-                      </div>
+                    {/* 해당 라인의 포지션들을 가로로 배치 */}
+                    <div className="flex justify-around items-start px-4">
+                      {line.positions.map((position) => {
+                        const playerId = match.lineup?.[position];
+                        const player = playerId
+                          ? match.participants.find((p) => p.id === playerId)
+                          : null;
+
+                        return (
+                          <div
+                            key={position}
+                            className="flex flex-col items-center w-20"
+                          >
+                            <div className="text-xs font-bold text-white mb-1.5 text-center">
+                              {position}
+                            </div>
+                            <div className="w-full bg-white/10 border-2 border-white/30 text-white rounded-lg px-2 py-2 text-center text-sm font-medium backdrop-blur-sm min-h-[2.5rem] flex items-center justify-center">
+                              {player ? (
+                                <span className="truncate w-full">
+                                  {player.name}
+                                </span>
+                              ) : (
+                                <span className="text-white/50">-</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-white/50">
-                    라인업이 아직 등록되지 않았습니다.
                   </div>
-                )}
+                ))}
               </div>
             </div>
           )}
@@ -316,16 +329,43 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
   );
 };
 
-// 포지션 코드에 따라 경기장 위 좌표(top, left %)를 반환하는 헬퍼 함수
-const getPosCoords = (pos: string) => {
-  const map: Record<string, { top: string; left: string }> = {
-    GK: { top: '90%', left: '50%' },
-    CB1: { top: '75%', left: '35%' },
-    CB2: { top: '75%', left: '65%' },
-    CM: { top: '50%', left: '50%' },
-    ST: { top: '20%', left: '50%' },
-  };
-  return map[pos] || { top: '50%', left: '50%' };
+// 포메이션별 라인 구성 반환
+const getFormationLines = (
+  formationStr: string
+): { label: string; positions: string[] }[] => {
+  switch (formationStr) {
+    case '4-3-3':
+      return [
+        { label: '공격', positions: ['LW', 'ST', 'RW'] },
+        { label: '미드필더', positions: ['CM1', 'DM', 'CM2'] },
+        { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
+        { label: '골키퍼', positions: ['GK'] },
+      ];
+    case '4-4-2':
+      return [
+        { label: '공격', positions: ['ST1', 'ST2'] },
+        { label: '미드필더', positions: ['LM', 'CM1', 'CM2', 'RM'] },
+        { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
+        { label: '골키퍼', positions: ['GK'] },
+      ];
+    case '3-5-2':
+      return [
+        { label: '공격', positions: ['ST1', 'ST2'] },
+        { label: '미드필더', positions: ['LWB', 'LM', 'CM', 'RM', 'RWB'] },
+        { label: '수비', positions: ['CB1', 'CB2', 'CB3'] },
+        { label: '골키퍼', positions: ['GK'] },
+      ];
+    case '4-2-3-1':
+      return [
+        { label: '공격', positions: ['ST'] },
+        { label: '공격형 미드필더', positions: ['LW', 'CAM', 'RW'] },
+        { label: '수비형 미드필더', positions: ['DM1', 'DM2'] },
+        { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
+        { label: '골키퍼', positions: ['GK'] },
+      ];
+    default:
+      return [];
+  }
 };
 
 export default MatchDetail;

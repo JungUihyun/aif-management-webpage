@@ -33,6 +33,12 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
   const [newGoalScorer, setNewGoalScorer] = useState('');
   const [newGoalAssist, setNewGoalAssist] = useState('');
 
+  // 포메이션 및 라인업 상태
+  const [formation, setFormation] = useState(match.formation || '');
+  const [lineup, setLineup] = useState<Record<string, string>>(
+    match.lineup || {}
+  );
+
   const [isSaving, setIsSaving] = useState(false);
 
   // 골 목록 로드
@@ -86,21 +92,150 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
   const handleSave = async () => {
     setIsSaving(true);
 
-    // 1. 스코어 업데이트
-    await api.updateMatchScore(match.id, ourScore, opponentScore);
+    try {
+      // 1. 스코어 업데이트
+      await api.updateMatchScore(match.id, ourScore, opponentScore);
 
-    // 2. 참여자 업데이트
-    await api.updateMatchParticipants(match.id, selectedParticipants);
+      // 2. 참여자 업데이트
+      await api.updateMatchParticipants(match.id, selectedParticipants);
 
-    setIsSaving(false);
-    onSave(); // 부모 컴포넌트에 저장 완료 알림
-    onClose();
+      // 3. 포메이션 및 라인업 업데이트
+      if (formation) {
+        await api.updateMatchFormation(match.id, formation, lineup);
+      }
+
+      setIsSaving(false);
+      onSave();
+      onClose();
+    } catch (error) {
+      console.error('저장 중 오류:', error);
+      alert('저장에 실패했습니다.');
+      setIsSaving(false);
+    }
   };
 
   // 득점자/어시스트 이름 가져오기
   const getUserName = (userId: string) => {
+    if (userId === 'guest') return '용병';
     const user = allUsers.find((u) => u.id === userId);
     return user ? user.name : userId;
+  };
+
+  // 포메이션별 포지션 목록 반환
+  const getPositionsForFormation = (formationStr: string): string[] => {
+    switch (formationStr) {
+      case '4-3-3':
+        return [
+          'GK',
+          'LB',
+          'CB1',
+          'CB2',
+          'RB',
+          'CM1',
+          'DM',
+          'CM2',
+          'LW',
+          'ST',
+          'RW',
+        ];
+      case '4-4-2':
+        return [
+          'GK',
+          'LB',
+          'CB',
+          'CB',
+          'RB',
+          'LM',
+          'CM',
+          'CM',
+          'RM',
+          'ST',
+          'ST',
+        ];
+      case '3-5-2':
+        return [
+          'GK',
+          'CB1',
+          'CB2',
+          'CB3',
+          'LWB',
+          'CM1',
+          'DM',
+          'CM2',
+          'RWB',
+          'ST1',
+          'ST2',
+        ];
+      case '4-2-3-1':
+        return [
+          'GK',
+          'LB',
+          'CB1',
+          'CB2',
+          'RB',
+          'DM1',
+          'DM2',
+          'LW',
+          'CAM',
+          'RW',
+          'ST',
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // 포메이션별 라인 구성 반환
+  const getFormationLines = (
+    formationStr: string
+  ): { label: string; positions: string[] }[] => {
+    switch (formationStr) {
+      case '4-3-3':
+        return [
+          { label: '공격', positions: ['LW', 'ST', 'RW'] },
+          { label: '미드필더', positions: ['CM1', 'DM', 'CM2'] },
+          { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
+          { label: '골키퍼', positions: ['GK'] },
+        ];
+      case '4-4-2':
+        return [
+          { label: '공격', positions: ['ST1', 'ST2'] },
+          { label: '미드필더', positions: ['LM', 'CM1', 'CM2', 'RM'] },
+          { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
+          { label: '골키퍼', positions: ['GK'] },
+        ];
+      case '3-5-2':
+        return [
+          { label: '공격', positions: ['ST1', 'ST2'] },
+          { label: '미드필더', positions: ['LWB', 'CM1', 'DM', 'CM2', 'RWB'] },
+          { label: '수비', positions: ['CB1', 'CB2', 'CB3'] },
+          { label: '골키퍼', positions: ['GK'] },
+        ];
+      case '4-2-3-1':
+        return [
+          { label: '공격', positions: ['ST'] },
+          { label: '공격형 미드필더', positions: ['LW', 'CAM', 'RW'] },
+          { label: '수비형 미드필더', positions: ['DM1', 'DM2'] },
+          { label: '수비', positions: ['LB', 'CB1', 'CB2', 'RB'] },
+          { label: '골키퍼', positions: ['GK'] },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // 포메이션 변경 시 라인업 초기화
+  const handleFormationChange = (newFormation: string) => {
+    setFormation(newFormation);
+    setLineup({});
+  };
+
+  // 포지션에 선수 할당
+  const handleLineupChange = (position: string, userId: string) => {
+    setLineup((prev) => ({
+      ...prev,
+      [position]: userId,
+    }));
   };
 
   return (
@@ -247,6 +382,7 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                   >
                     <option value="">선택하세요</option>
+                    <option value="guest">용병</option>
                     {selectedParticipants.map((userId) => {
                       const user = allUsers.find((u) => u.id === userId);
                       return user ? (
@@ -267,6 +403,9 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                   >
                     <option value="">없음</option>
+                    {newGoalScorer !== 'guest' && (
+                      <option value="guest">용병</option>
+                    )}
                     {selectedParticipants
                       .filter((id) => id !== newGoalScorer)
                       .map((userId) => {
@@ -296,6 +435,110 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
                   >
                     취소
                   </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 포메이션 및 라인업 설정 */}
+          <div>
+            <h4 className="font-bold text-gray-800 mb-3 flex items-center">
+              ⚽ 포메이션 & 라인업
+            </h4>
+
+            {/* 포메이션 선택 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                포메이션 선택
+              </label>
+              <select
+                value={formation}
+                onChange={(e) => handleFormationChange(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+              >
+                <option value="">미정</option>
+                <option value="4-3-3">4-3-3</option>
+                <option value="4-4-2">4-4-2</option>
+                <option value="3-5-2">3-5-2</option>
+                <option value="4-2-3-1">4-2-3-1</option>
+              </select>
+            </div>
+
+            {/* 라인업 설정 */}
+            {formation && formation !== '미정' && (
+              <div className="bg-gradient-to-b from-green-600 to-green-700 rounded-lg p-6 space-y-6">
+                <p className="text-sm text-white/90 text-center mb-4">
+                  각 포지션에 선수를 배치하세요
+                </p>
+
+                {/* 라인별 포지션 표시 */}
+                <div className="space-y-6">
+                  {getFormationLines(formation).map((line) => (
+                    <div key={line.label} className="space-y-2">
+                      {/* 라인 레이블 */}
+                      <div className="text-center">
+                        <span className="inline-block bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
+                          {line.label}
+                        </span>
+                      </div>
+
+                      {/* 해당 라인의 포지션들을 가로로 배치 */}
+                      <div className="flex justify-around items-start px-4">
+                        {line.positions.map((position) => (
+                          <div
+                            key={position}
+                            className="flex flex-col items-center w-20"
+                          >
+                            <div className="text-xs font-bold text-white mb-1.5 text-center">
+                              {position}
+                            </div>
+                            <select
+                              value={lineup[position] || ''}
+                              onChange={(e) =>
+                                handleLineupChange(position, e.target.value)
+                              }
+                              className="w-full border-2 border-white/30 bg-white/10 text-white rounded-lg px-2 py-2 text-sm font-medium focus:ring-2 focus:ring-white focus:border-white outline-none backdrop-blur-sm hover:bg-white/20 transition-colors"
+                            >
+                              <option value="" className="bg-gray-800">
+                                -
+                              </option>
+                              <option value="guest" className="bg-gray-800">
+                                용병
+                              </option>
+                              {selectedParticipants.map((userId) => {
+                                const user = allUsers.find(
+                                  (u) => u.id === userId
+                                );
+                                return user ? (
+                                  <option
+                                    key={user.id}
+                                    value={user.id}
+                                    className="bg-gray-800"
+                                  >
+                                    {user.name}
+                                  </option>
+                                ) : null;
+                              })}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 진행 상황 표시 */}
+                <div className="text-center pt-4 border-t border-white/20">
+                  <p className="text-sm text-white/90">
+                    <span className="font-bold text-white">
+                      {Object.keys(lineup).filter((k) => lineup[k]).length}
+                    </span>
+                    {' / '}
+                    <span className="font-bold text-white">
+                      {getPositionsForFormation(formation).length}
+                    </span>{' '}
+                    포지션 배치 완료
+                  </p>
                 </div>
               </div>
             )}
