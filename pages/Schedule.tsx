@@ -216,54 +216,66 @@ const Schedule: React.FC = () => {
                   className="block"
                 >
                   <div
-                    className={`bg-white p-5 rounded-xl shadow-sm border transition-all group ${matchResultClass}`}
+                    className={`bg-white p-4 sm:p-5 rounded-xl shadow-sm border transition-all group ${matchResultClass}`}
                   >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <div className="flex flex-col items-center bg-gray-50 p-2 rounded-lg min-w-[60px]">
-                          <span className="text-xs text-gray-500">
+                    {/* 모바일: 세로 레이아웃, 태블릿 이상: 가로 레이아웃 */}
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                      {/* 메인 정보 영역 */}
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {/* 날짜 박스 */}
+                        <div className="flex flex-col items-center bg-gray-50 p-2 rounded-lg min-w-[52px] flex-shrink-0">
+                          <span className="text-[10px] text-gray-500">
                             {match.date.split('-')[1]}월
                           </span>
-                          <span className="text-xl font-bold text-gray-800">
+                          <span className="text-lg font-bold text-gray-800">
                             {match.date.split('-')[2]}
                           </span>
                         </div>
 
-                        {/* 스코어 표시 - 날짜 옆에 작게 */}
-                        {match.status === MatchStatus.COMPLETED &&
-                          match.score && (
-                            <div className="flex items-center px-3 py-1 rounded-lg border border-black/30 flex-shrink-0">
-                              <span className="text-lg font-bold text-primary font-mono">
-                                {match.score.us}
-                              </span>
-                              <span className="text-xs text-gray-400 mx-1.5">
-                                :
-                              </span>
-                              <span className="text-lg font-bold text-gray-600 font-mono">
-                                {match.score.opponent}
-                              </span>
-                            </div>
-                          )}
-
+                        {/* 타이틀 및 세부 정보 */}
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-bold text-lg text-gray-800 group-hover:transition-colors truncate">
-                            {match.opponent}
-                          </h3>
-                          <div className="flex items-center text-sm text-gray-500 mt-1 space-x-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-base sm:text-lg text-gray-800 group-hover:transition-colors truncate">
+                              {match.opponent}
+                            </h3>
+                            {/* 스코어 표시 - 타이틀 옆 */}
+                            {match.status === MatchStatus.COMPLETED &&
+                              match.score && (
+                                <div className="flex items-center px-2 py-0.5 rounded border border-black/30 flex-shrink-0">
+                                  <span className="text-sm font-bold text-primary font-mono">
+                                    {match.score.us}
+                                  </span>
+                                  <span className="text-xs text-gray-400 mx-1">
+                                    :
+                                  </span>
+                                  <span className="text-sm font-bold text-gray-600 font-mono">
+                                    {match.score.opponent}
+                                  </span>
+                                </div>
+                              )}
+                          </div>
+
+                          {/* 시간과 장소 - 작은 화면에서는 세로 배치 */}
+                          <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-500 mt-1.5 gap-1 sm:gap-3">
                             <span className="flex items-center">
-                              <Clock size={14} className="mr-1" /> {match.time}
+                              <Clock size={14} className="mr-1 flex-shrink-0" />{' '}
+                              {match.time}
                             </span>
-                            <span className="flex items-center">
-                              <MapPin size={14} className="mr-1" />{' '}
-                              {match.location}
+                            <span className="flex items-center truncate">
+                              <MapPin
+                                size={14}
+                                className="mr-1 flex-shrink-0"
+                              />
+                              <span className="truncate">{match.location}</span>
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end space-y-2">
+                      {/* 상태 및 참여 정보 - 모바일에서는 가로 배치 */}
+                      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-2">
                         {getStatusBadge(match.status)}
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-gray-400 whitespace-nowrap">
                           {match.participants.length}명 참여
                         </span>
                       </div>
