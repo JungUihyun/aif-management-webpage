@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin,
@@ -29,7 +29,7 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
   const [allUsers, setAllUsers] = useState<User[]>([]); // 전체 유저 목록 (참여자 관리용)
   const [goals, setGoals] = useState<Goal[]>([]); // 득점 기록
 
-  const fetchMatchData = () => {
+  const fetchMatchData = useCallback(() => {
     if (id) {
       api.getMatchById(id).then((data) => {
         if (data) {
@@ -41,17 +41,26 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
       // 득점 기록 조회
       api.getMatchGoals(id).then(setGoals);
     }
-  };
+  }, [id, user.id]);
 
   useEffect(() => {
     fetchMatchData();
     // 전체 유저 목록 가져오기 (수정 모달용)
     api.getUsers().then(setAllUsers);
-  }, [id]);
+  }, [fetchMatchData]);
 
-  const handleToggleJoin = () => {
-    // 실제 앱에서는 API를 호출하여 참여 상태를 DB에 업데이트해야 함
-    setIsJoined(!isJoined);
+  const handleToggleJoin = async () => {
+    if (!id) return;
+
+    // API 호출하여 참가 신청/취소
+    const success = await api.toggleMatchParticipation(id, user.id);
+
+    if (success) {
+      // 성공 시 경기 데이터 새로고침
+      fetchMatchData();
+    } else {
+      alert('참가 신청/취소에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   // 경기 상태 변경 핸들러 (임원/매니저만 사용)

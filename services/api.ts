@@ -407,6 +407,52 @@ export const api = {
     return true;
   },
 
+  // 개별 사용자 참가 신청/취소 토글
+  toggleMatchParticipation: async (
+    matchId: string,
+    userId: string
+  ): Promise<boolean> => {
+    try {
+      // 현재 참여자 확인
+      const { data: existing } = await supabase
+        .from('match_participants')
+        .select('*')
+        .eq('match_id', matchId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existing) {
+        // 이미 참여 중이면 삭제 (참여 취소)
+        const { error } = await supabase
+          .from('match_participants')
+          .delete()
+          .eq('match_id', matchId)
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('참여 취소 오류:', error);
+          return false;
+        }
+      } else {
+        // 참여하지 않았으면 추가 (참여 신청)
+        const { error } = await supabase.from('match_participants').insert({
+          match_id: matchId,
+          user_id: userId,
+        });
+
+        if (error) {
+          console.error('참여 신청 오류:', error);
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('참가 신청/취소 처리 오류:', error);
+      return false;
+    }
+  },
+
   // 경기 포메이션 및 라인업 업데이트
   updateMatchFormation: async (
     matchId: string,
