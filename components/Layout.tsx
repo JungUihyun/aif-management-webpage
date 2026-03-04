@@ -36,12 +36,16 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
   }) => (
     <Link
       to={to}
-      className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-        isActive(to) ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
+      className={`flex flex-col items-center justify-center w-full h-full space-y-[4px] ${
+        isActive(to) ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
       }`}
     >
-      <Icon size={24} />
-      <span className="text-[10px] font-medium">{label}</span>
+      <Icon size={24} strokeWidth={isActive(to) ? 2.5 : 2} />
+      <span
+        className={`text-[11px] ${isActive(to) ? 'font-bold' : 'font-medium'}`}
+      >
+        {label}
+      </span>
     </Link>
   );
 
@@ -69,7 +73,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row">
       {/* 
         데스크탑 사이드바 
         - md 브레이크포인트 이상에서만 표시 (hidden md:flex)
@@ -131,13 +135,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
         - md 미만에서만 표시 (md:hidden)
         - 상단 고정 (sticky top-0)
       */}
-      <header className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-20 h-14 flex items-center justify-between px-4">
+      <header className="md:hidden bg-background sticky top-0 z-20 pt-4 pb-2 flex items-center justify-between px-5">
         <Link to="/" className="flex items-center">
           <div className="flex items-center">
-            <div className="w-8 h-8 flex items-center justify-center text-2xl mr-2">
-              ⚽
-            </div>
-            <span className="font-bold text-lg text-gray-800">AIF</span>
+            <span className="font-bold text-2xl text-gray-900 tracking-tight">
+              AIF
+            </span>
           </div>
         </Link>
         <div className="flex items-center space-x-3">
@@ -145,20 +148,20 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
             onClick={logout}
             className="text-gray-400 hover:text-gray-600"
           >
-            <LogOut size={20} />
+            <LogOut size={22} strokeWidth={2.5} />
           </button>
           <Link to="/mypage">
             <img
               src={user?.avatarUrl}
               alt="Profile"
-              className="w-8 h-8 rounded-full border border-gray-200 bg-gray-100 object-cover"
+              className="w-9 h-9 rounded-full bg-gray-200 object-cover"
             />
           </Link>
         </div>
       </header>
 
       {/* 메인 컨텐츠 영역 */}
-      <main className="flex-1 pb-20 md:pb-0 overflow-y-auto no-scrollbar">
+      <main className="flex-1 pb-24 md:pb-0 overflow-y-auto no-scrollbar">
         <div className="max-w-5xl mx-auto p-4 md:p-8">{children}</div>
       </main>
 
@@ -167,7 +170,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
         - md 미만에서만 표시 (md:hidden)
         - 하단 고정 (fixed bottom-0)
       */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 h-16 flex z-20 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-gray-100/50 h-[68px] flex z-20 pb-safe shadow-[0_-4px_16px_rgba(0,0,0,0.02)] rounded-t-3xl">
         <NavItem to="/" icon={Home} label="홈" />
         <NavItem to="/schedule" icon={Calendar} label="일정" />
         <NavItem to="/notices" icon={Bell} label="공지" />

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin,
-  Clock,
   Users,
   ArrowLeft,
   Shield,
@@ -87,138 +86,203 @@ const MatchDetail: React.FC<MatchDetailProps> = ({ user }) => {
 
   return (
     <div className="space-y-6">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center text-gray-500 hover:text-gray-800"
-      >
-        <ArrowLeft size={16} className="mr-1" /> 목록으로
-      </button>
+      <div className="flex items-center px-1 mb-2">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-gray-800 hover:text-gray-500 transition-colors p-2 -ml-2 rounded-full active:bg-gray-100"
+        >
+          <ArrowLeft size={24} strokeWidth={2.5} />
+        </button>
+      </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-[28px] shadow-[0_2px_14px_rgba(0,0,0,0.02)] overflow-hidden">
         {/* 경기 헤더 섹션 (스코어 및 기본 정보) */}
-        <div className="bg-primary p-6 text-white">
-          <div className="flex justify-between items-start mb-4">
+        <div className="p-6 sm:p-8">
+          <div className="flex justify-between items-start mb-6">
             {/* 상태 표시 - 관리자는 드롭다운, 일반 유저는 뱃지만 */}
             {canEdit ? (
-              <div className="relative inline-block">
-                <select
-                  value={match.status}
-                  onChange={(e) =>
-                    handleStatusChange(e.target.value as MatchStatus)
-                  }
-                  disabled={isUpdatingStatus}
-                  className="bg-white/20 px-3 py-1 pr-8 rounded-full text-xs font-medium backdrop-blur-sm appearance-none cursor-pointer hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value={MatchStatus.UPCOMING} className="bg-gray-800">
-                    경기 예정
-                  </option>
-                  <option value={MatchStatus.COMPLETED} className="bg-gray-800">
-                    경기 종료
-                  </option>
-                  <option value={MatchStatus.CANCELLED} className="bg-gray-800">
-                    경기 취소
-                  </option>
-                </select>
-                <ChevronDown
-                  size={12}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                />
+              <div className="flex items-center gap-2">
+                <div className="relative inline-block">
+                  <select
+                    value={match.status}
+                    onChange={(e) =>
+                      handleStatusChange(e.target.value as MatchStatus)
+                    }
+                    disabled={isUpdatingStatus}
+                    className="bg-gray-100 text-gray-800 px-4 py-2 pr-9 rounded-full text-[13px] font-bold appearance-none cursor-pointer hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:ring-2 focus:ring-[#00a550]/20"
+                  >
+                    <option value={MatchStatus.UPCOMING}>경기 예정</option>
+                    <option value={MatchStatus.COMPLETED}>경기 종료</option>
+                    <option value={MatchStatus.CANCELLED}>경기 취소</option>
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+                    strokeWidth={2.5}
+                  />
+                </div>
+                {match.status === MatchStatus.COMPLETED && match.score && (
+                  <span
+                    className={`px-3 py-1.5 rounded-full text-[13px] font-bold ${match.score.us > match.score.opponent ? 'bg-blue-50 text-blue-600' : match.score.us < match.score.opponent ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-600'}`}
+                  >
+                    {match.score.us > match.score.opponent
+                      ? '승리'
+                      : match.score.us < match.score.opponent
+                        ? '패배'
+                        : '무승부'}
+                  </span>
+                )}
               </div>
             ) : (
-              <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
-                {match.status === MatchStatus.UPCOMING
-                  ? '경기 예정'
-                  : match.status === MatchStatus.COMPLETED
-                    ? '경기 종료'
-                    : '경기 취소'}
-              </span>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`px-4 py-2 rounded-full text-[13px] font-bold ${
+                    match.status === MatchStatus.UPCOMING
+                      ? 'bg-[#e8f3ee] text-[#00a550]'
+                      : match.status === MatchStatus.COMPLETED
+                        ? 'bg-gray-100 text-gray-600'
+                        : 'bg-red-50 text-red-600'
+                  }`}
+                >
+                  {match.status === MatchStatus.UPCOMING
+                    ? '경기 예정'
+                    : match.status === MatchStatus.COMPLETED
+                      ? '경기 종료'
+                      : '경기 취소'}
+                </span>
+                {match.status === MatchStatus.COMPLETED && match.score && (
+                  <span
+                    className={`px-4 py-2 rounded-full text-[13px] font-bold ${match.score.us > match.score.opponent ? 'bg-blue-50 text-blue-600' : match.score.us < match.score.opponent ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-600'}`}
+                  >
+                    {match.score.us > match.score.opponent
+                      ? '승리'
+                      : match.score.us < match.score.opponent
+                        ? '패배'
+                        : '무승부'}
+                  </span>
+                )}
+              </div>
             )}
             {/* 관리자에게만 수정 버튼 표시 */}
             {canEdit && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="bg-white/20 p-2 rounded-full hover:bg-white/30 backdrop-blur-sm"
+                className="bg-gray-50 p-2.5 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
                 title="경기 수정"
               >
-                <Edit2 size={16} />
+                <Edit2 size={18} strokeWidth={2.5} />
               </button>
             )}
           </div>
-          <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
-            <div>
-              {/* 스코어 표시 - 스코어가 설정되어 있으면 항상 표시 */}
-              {match.score && (
-                <div className="mb-4 bg-white/10 p-4 rounded-xl backdrop-blur-sm inline-block">
-                  <div className="text-sm opacity-80 mb-1">SCORE</div>
-                  <div className="text-4xl font-bold font-mono tracking-widest">
-                    {match.score.us} : {match.score.opponent}
-                  </div>
-                </div>
-              )}
 
-              {/* 득점 내역 표시 */}
-              {goals.length > 0 && (
-                <div className="mb-4 space-y-1">
-                  {goals.map((goal) => {
-                    const scorer = allUsers.find((u) => u.id === goal.scorerId);
-                    const assister = goal.assistId
-                      ? allUsers.find((u) => u.id === goal.assistId)
-                      : null;
-                    return (
-                      <div
-                        key={goal.id}
-                        className="text-white/90 text-sm flex items-center"
-                      >
-                        <span className="mr-2">⚽</span>
-                        <span className="font-medium">
-                          {scorer?.name || goal.scorerId}
-                        </span>
-                        {assister && (
-                          <>
-                            <span className="mx-2 text-white/60">←</span>
-                            <span className="text-white/80">
-                              {assister.name}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+          <div className="flex flex-col text-left">
+            <h1 className="text-[28px] sm:text-[32px] font-bold text-gray-900 mb-4 tracking-tight leading-tight">
+              {match.opponent}
+            </h1>
 
-              <h1 className="text-3xl font-bold mb-2">{match.opponent}</h1>
-              <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 text-white/80">
-                <span className="flex items-center">
-                  <Clock size={16} className="mr-1" /> {match.date} {match.time}
-                </span>
-                <span className="flex items-center">
-                  <MapPin size={16} className="mr-1" /> {match.location}
-                </span>
+            {/* 스코어 표시 - 스코어가 설정되어 있으면 항상 표시 */}
+            {match.score && (
+              <div className="mb-6 bg-gray-50 p-5 rounded-[20px] inline-block self-start border border-gray-100">
+                <div className="text-[12px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                  Result
+                </div>
+                <div className="text-[36px] font-bold tracking-tight text-gray-900 flex items-center justify-center">
+                  <span
+                    className={
+                      match.score.us > match.score.opponent
+                        ? 'text-[#00a550]'
+                        : ''
+                    }
+                  >
+                    {match.score.us}
+                  </span>
+                  <span className="text-gray-300 mx-3 text-[24px]">:</span>
+                  <span
+                    className={
+                      match.score.us < match.score.opponent
+                        ? 'text-red-500'
+                        : 'text-gray-600'
+                    }
+                  >
+                    {match.score.opponent}
+                  </span>
+                </div>
               </div>
+            )}
+
+            {/* 득점 내역 표시 */}
+            {goals.length > 0 && (
+              <div className="mb-6 space-y-2">
+                {goals.map((goal) => {
+                  const scorer = allUsers.find((u) => u.id === goal.scorerId);
+                  const assister = goal.assistId
+                    ? allUsers.find((u) => u.id === goal.assistId)
+                    : null;
+                  return (
+                    <div
+                      key={goal.id}
+                      className="text-gray-700 text-[14px] flex items-center bg-gray-50/50 py-1 px-3 rounded-lg inline-flex"
+                    >
+                      <span className="mr-2 text-[12px]">⚽</span>
+                      <span className="font-bold text-gray-900">
+                        {scorer?.name || goal.scorerId}
+                      </span>
+                      {assister && (
+                        <>
+                          <span className="mx-2 text-gray-400 text-[12px]">
+                            도움
+                          </span>
+                          <span className="font-medium text-gray-600">
+                            {assister.name}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 text-[15px] font-medium text-gray-600 mt-2">
+              <span className="flex items-center bg-gray-50 px-3 py-1.5 rounded-lg">
+                {match.date.split('-')[1]}월 {match.date.split('-')[2]}일{' '}
+                {match.time}
+              </span>
+              <span className="flex items-center bg-gray-50 px-3 py-1.5 rounded-lg">
+                <MapPin size={16} className="mr-1.5 text-gray-400" />{' '}
+                {match.location}
+              </span>
             </div>
           </div>
         </div>
 
         {/* 액션 바 (참여 신청 버튼) */}
-        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-          <div className="flex items-center text-gray-600">
-            <Users size={20} className="mr-2" />
-            <span className="font-bold">{match.participants.length}</span>
-            <span className="text-sm ml-1">명 참여 중</span>
-          </div>
+        <div className="px-6 pb-6 pt-2">
           {match.status === MatchStatus.UPCOMING && (
             <button
               onClick={handleToggleJoin}
-              className={`px-6 py-2 rounded-lg font-bold transition-colors ${
+              className={`w-full py-4 rounded-[16px] font-bold text-[17px] active:scale-[0.98] transition-all flex items-center justify-center ${
                 isJoined
-                  ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                  : 'bg-primary text-white hover:bg-green-800'
+                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-[#00a550] text-white hover:bg-[#008f45] shadow-sm'
               }`}
             >
-              {isJoined ? '참여 취소' : '참여 신청'}
+              {isJoined ? '참여 취소' : '참여하기'}
             </button>
           )}
+        </div>
+
+        <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-y border-gray-100">
+          <div className="flex items-center text-gray-700">
+            <span className="font-bold text-[15px]">참여 인원</span>
+          </div>
+          <div className="flex items-center bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100">
+            <Users size={16} className="mr-1.5 text-gray-400" />
+            <span className="font-bold text-[15px] text-gray-900">
+              {match.participants.length}
+            </span>
+            <span className="text-[14px] text-gray-500 ml-0.5">명</span>
+          </div>
         </div>
 
         {/* 하단 컨텐츠 (라인업 및 명단) */}

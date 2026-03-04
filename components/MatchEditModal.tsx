@@ -140,29 +140,29 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 sm:p-4 transition-opacity">
+      <div className="bg-white w-full max-w-2xl sm:rounded-[28px] rounded-t-[28px] rounded-b-none shadow-xl overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:fade-in sm:zoom-in-95 duration-300 pb-safe">
         {/* 헤더 */}
-        <div className="bg-primary px-6 py-4 flex justify-between items-center text-white">
-          <h3 className="font-bold text-lg">경기 수정</h3>
+        <div className="px-6 pt-7 pb-4 flex justify-between items-center text-gray-900 border-b border-gray-50 bg-white/90 backdrop-blur-md sticky top-0 z-10 w-full transition-colors">
+          <h3 className="font-bold text-[22px] tracking-tight">경기 관리</h3>
           <button
             onClick={onClose}
-            className="hover:bg-white/20 p-1 rounded-full transition-colors"
+            className="text-gray-400 hover:text-gray-600 p-2 rounded-full transition-colors bg-gray-50 flex-shrink-0"
           >
-            <X size={20} />
+            <X size={20} strokeWidth={2.5} />
           </button>
         </div>
 
         {/* 내용 (스크롤 가능) */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+        <div className="p-6 space-y-8 overflow-y-auto flex-1">
           {/* 스코어 설정 */}
           <div>
-            <h4 className="font-bold text-gray-800 mb-3 flex items-center">
-              📊 스코어 설정
+            <h4 className="font-bold text-[18px] text-gray-900 mb-4 tracking-tight">
+              스코어
             </h4>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <div className="flex-1">
-                <label className="block text-sm text-gray-600 mb-1">
+                <label className="block text-[14px] font-bold text-gray-500 mb-2 pl-1">
                   우리 팀
                 </label>
                 <input
@@ -170,12 +170,12 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
                   min="0"
                   value={ourScore}
                   onChange={(e) => setOurScore(parseInt(e.target.value) || 0)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-center text-xl font-bold focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full bg-[#f2f4f6] rounded-[16px] px-5 py-4 text-center text-[24px] font-bold text-[#00a550] focus:outline-none focus:ring-2 focus:ring-[#00a550]/20 transition-all border-none"
                 />
               </div>
-              <div className="text-2xl font-bold text-gray-400 pt-6">:</div>
+              <div className="text-[28px] font-bold text-gray-300 mt-6">:</div>
               <div className="flex-1">
-                <label className="block text-sm text-gray-600 mb-1">
+                <label className="block text-[14px] font-bold text-gray-500 mb-2 pl-1">
                   상대 팀
                 </label>
                 <input
@@ -185,7 +185,7 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
                   onChange={(e) =>
                     setOpponentScore(parseInt(e.target.value) || 0)
                   }
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-center text-xl font-bold focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full bg-[#f2f4f6] rounded-[16px] px-5 py-4 text-center text-[24px] font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00a550]/20 transition-all border-none"
                 />
               </div>
             </div>
@@ -458,20 +458,20 @@ const MatchEditModal: React.FC<MatchEditModalProps> = ({
         </div>
 
         {/* 푸터 (저장/취소 버튼) */}
-        <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3 border-t">
+        <div className="px-6 py-4 bg-white/90 backdrop-blur-md flex space-x-3 border-t border-gray-50 sticky bottom-0 z-10 w-full transition-colors pb-safe">
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-4 bg-gray-100 rounded-[16px] text-gray-700 font-bold hover:bg-gray-200 transition-colors"
           >
             취소
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-green-800 transition-colors font-medium disabled:opacity-50"
+            className="flex-[2] px-4 py-4 bg-[#00a550] text-white rounded-[16px] font-bold hover:bg-[#008f45] active:scale-[0.98] transition-all disabled:opacity-50"
           >
-            {isSaving ? '저장 중...' : '저장'}
+            {isSaving ? '저장 중...' : '저장하기'}
           </button>
         </div>
       </div>

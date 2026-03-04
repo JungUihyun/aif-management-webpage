@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  ChevronLeft,
-  ChevronRight,
-  MapPin,
-  Clock,
-  Plus,
-  X,
-} from 'lucide-react';
-import { MatchStatus, UserRole } from '../types';
+import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import { Match, MatchStatus, UserRole } from '../types';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useMatches } from '../hooks/useMatches';
@@ -59,23 +52,51 @@ const Schedule: React.FC = () => {
   });
 
   // 상태에 따른 배지 UI 반환
-  const getStatusBadge = (status: MatchStatus) => {
-    switch (status) {
+  const getStatusBadge = (match: Match) => {
+    switch (match.status) {
       case MatchStatus.UPCOMING:
         return (
-          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+          <span className="bg-[#e8f3ee] text-[#00a550] text-[11px] font-bold px-2.5 py-1 rounded-full">
             예정
           </span>
         );
       case MatchStatus.COMPLETED:
+        if (match.score) {
+          const isWin = match.score.us > match.score.opponent;
+          const isLoss = match.score.us < match.score.opponent;
+
+          let resultText = '무승부';
+          let resultColor = 'bg-gray-100 text-gray-600';
+          if (isWin) {
+            resultText = '승리';
+            resultColor = 'bg-blue-50 text-blue-600';
+          } else if (isLoss) {
+            resultText = '패배';
+            resultColor = 'bg-red-50 text-red-600';
+          }
+
+          return (
+            <div className="flex items-center space-x-1.5">
+              <span className="bg-gray-100 text-gray-600 text-[11px] font-bold px-2.5 py-1 rounded-full">
+                종료
+              </span>
+              <span
+                className={`${resultColor} text-[11px] font-bold px-2.5 py-1 rounded-full`}
+              >
+                {resultText}
+              </span>
+            </div>
+          );
+        }
+
         return (
-          <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
+          <span className="bg-gray-100 text-gray-600 text-[11px] font-bold px-2.5 py-1 rounded-full">
             종료
           </span>
         );
       case MatchStatus.CANCELLED:
         return (
-          <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+          <span className="bg-red-50 text-red-600 text-[11px] font-bold px-2.5 py-1 rounded-full">
             취소
           </span>
         );
@@ -117,57 +138,61 @@ const Schedule: React.FC = () => {
   return (
     <div className="space-y-6 relative">
       {/* 상단 컨트롤 바 (날짜 이동, 뷰 전환, 생성 버튼) */}
-      <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm gap-4">
-        <div className="flex items-center space-x-4 w-full sm:w-auto justify-between sm:justify-start">
-          <button
-            onClick={prevMonth}
-            className="p-2 hover:bg-gray-100 rounded-full"
-          >
-            <ChevronLeft />
-          </button>
-          <h2 className="text-xl font-bold text-gray-800">
-            {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
-          </h2>
-          <button
-            onClick={nextMonth}
-            className="p-2 hover:bg-gray-100 rounded-full"
-          >
-            <ChevronRight />
-          </button>
+      <div className="flex flex-col sm:flex-row justify-between items-center px-3 py-2 gap-4">
+        <div className="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-start">
+          <div className="flex items-center">
+            <h2 className="text-[22px] md:text-[24px] font-bold text-gray-900 tracking-tight">
+              {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
+            </h2>
+          </div>
+          <div className="flex space-x-1 sm:ml-4">
+            <button
+              onClick={prevMonth}
+              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ChevronLeft size={26} strokeWidth={2.5} />
+            </button>
+            <button
+              onClick={nextMonth}
+              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ChevronRight size={26} strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2 w-full sm:w-auto">
-          {/* 권한이 있는 경우에만 경기 추가 버튼 표시 */}
-          {canCreateMatch && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex-1 sm:flex-none flex items-center justify-center bg-primary text-white px-4 py-2 rounded-lg hover:bg-green-800 transition-colors text-sm font-bold shadow-sm"
-            >
-              <Plus size={16} className="mr-1" /> 일정 추가
-            </button>
-          )}
-          <div className="flex bg-gray-100 p-1 rounded-lg flex-shrink-0">
+        <div className="flex justify-between items-center sm:space-x-2 w-full sm:w-auto">
+          <div className="flex bg-gray-100/80 p-1 rounded-xl flex-shrink-0 mr-3 sm:mr-0">
             <button
               onClick={() => setView('list')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-[13px] font-bold transition-all ${
                 view === 'list'
-                  ? 'bg-white shadow-sm text-primary'
-                  : 'text-gray-500'
+                  ? 'bg-white shadow-sm text-gray-900'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               리스트
             </button>
             <button
               onClick={() => setView('month')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-[13px] font-bold transition-all ${
                 view === 'month'
-                  ? 'bg-white shadow-sm text-primary'
-                  : 'text-gray-500'
+                  ? 'bg-white shadow-sm text-gray-900'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               달력
             </button>
           </div>
+          {/* 권한이 있는 경우에만 경기 추가 버튼 표시 */}
+          {canCreateMatch && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex-1 sm:flex-none flex items-center justify-center bg-[#00a550] text-white px-4 py-2 rounded-[14px] hover:bg-[#008f45] transition-colors text-[14px] font-bold shadow-sm"
+            >
+              <Plus size={18} className="mr-1 stroke-2" /> 일정 추가
+            </button>
+          )}
         </div>
       </div>
 
@@ -188,26 +213,6 @@ const Schedule: React.FC = () => {
               // 경기 결과 판정 (스코어 기준)
               const isCompleted = match.status === MatchStatus.COMPLETED;
               const hasScore = match.score !== undefined;
-              let matchResultClass = '';
-
-              if (isCompleted && hasScore) {
-                if (match.score.us > match.score.opponent) {
-                  // 승리: 은은한 초록색
-                  matchResultClass =
-                    'bg-green-50/50 border-green-200 hover:border-green-400';
-                } else if (match.score.us < match.score.opponent) {
-                  // 패배: 은은한 빨간색
-                  matchResultClass =
-                    'bg-red-50/50 border-red-200 hover:border-red-400';
-                } else {
-                  // 무승부: 은은한 노란색
-                  matchResultClass =
-                    'bg-yellow-50/50 border-yellow-200 hover:border-yellow-400';
-                }
-              } else {
-                // 예정 경기 또는 취소: 기본 스타일
-                matchResultClass = 'border-gray-100 hover:border-primary';
-              }
 
               return (
                 <Link
@@ -216,68 +221,107 @@ const Schedule: React.FC = () => {
                   className="block"
                 >
                   <div
-                    className={`bg-white p-4 sm:p-5 rounded-xl shadow-sm border transition-all group ${matchResultClass}`}
+                    className={`bg-white p-5 rounded-[24px] shadow-[0_2px_14px_rgba(0,0,0,0.02)] transition-all group ${
+                      isCompleted && hasScore
+                        ? 'border-2 border-transparent hover:border-gray-100'
+                        : 'border-0'
+                    } active:scale-[0.98] transform duration-200`}
                   >
                     {/* 모바일: 세로 레이아웃, 태블릿 이상: 가로 레이아웃 */}
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                       {/* 메인 정보 영역 */}
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
                         {/* 날짜 박스 */}
-                        <div className="flex flex-col items-center bg-gray-50 p-2 rounded-lg min-w-[52px] flex-shrink-0">
-                          <span className="text-[10px] text-gray-500">
+                        <div
+                          className={`flex flex-col items-center justify-center w-[60px] h-[60px] rounded-2xl flex-shrink-0 ${
+                            isCompleted && hasScore
+                              ? match.score.us > match.score.opponent
+                                ? 'bg-[#f0f9f4]'
+                                : match.score.us < match.score.opponent
+                                  ? 'bg-red-50'
+                                  : 'bg-gray-50'
+                              : 'bg-gray-50'
+                          }`}
+                        >
+                          <span
+                            className={`text-[11px] font-bold ${
+                              isCompleted && hasScore
+                                ? match.score.us > match.score.opponent
+                                  ? 'text-[#00a550]'
+                                  : match.score.us < match.score.opponent
+                                    ? 'text-red-500'
+                                    : 'text-gray-500'
+                                : 'text-gray-500'
+                            }`}
+                          >
                             {match.date.split('-')[1]}월
                           </span>
-                          <span className="text-lg font-bold text-gray-800">
+                          <span
+                            className={`text-[20px] font-bold -mt-1 ${
+                              isCompleted && hasScore
+                                ? match.score.us > match.score.opponent
+                                  ? 'text-[#00a550]'
+                                  : match.score.us < match.score.opponent
+                                    ? 'text-red-600'
+                                    : 'text-gray-700'
+                                : 'text-gray-900'
+                            }`}
+                          >
                             {match.date.split('-')[2]}
                           </span>
                         </div>
 
                         {/* 타이틀 및 세부 정보 */}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-base sm:text-lg text-gray-800 group-hover:transition-colors truncate">
+                        <div className="min-w-0 flex-1 py-1">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            {getStatusBadge(match)}
+                            <h3 className="font-bold text-[18px] text-gray-900 truncate tracking-tight">
                               {match.opponent}
                             </h3>
-                            {/* 스코어 표시 - 타이틀 옆 */}
-                            {match.status === MatchStatus.COMPLETED &&
-                              match.score && (
-                                <div className="flex items-center px-2 py-0.5 rounded border border-black/30 flex-shrink-0">
-                                  <span className="text-sm font-bold text-primary font-mono">
-                                    {match.score.us}
-                                  </span>
-                                  <span className="text-xs text-gray-400 mx-1">
-                                    :
-                                  </span>
-                                  <span className="text-sm font-bold text-gray-600 font-mono">
-                                    {match.score.opponent}
-                                  </span>
-                                </div>
-                              )}
                           </div>
 
-                          {/* 시간과 장소 - 작은 화면에서는 세로 배치 */}
-                          <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-500 mt-1.5 gap-1 sm:gap-3">
+                          {/* 시간과 장소 */}
+                          <div className="flex items-center text-[13px] text-gray-500 font-medium gap-3">
                             <span className="flex items-center">
-                              <Clock size={14} className="mr-1 flex-shrink-0" />{' '}
                               {match.time}
                             </span>
+                            <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
                             <span className="flex items-center truncate">
-                              <MapPin
-                                size={14}
-                                className="mr-1 flex-shrink-0"
-                              />
                               <span className="truncate">{match.location}</span>
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* 상태 및 참여 정보 - 모바일에서는 가로 배치 */}
-                      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-2">
-                        {getStatusBadge(match.status)}
-                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                      {/* 상태 및 결과 영역 */}
+                      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t border-gray-50 sm:border-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
+                        <span className="text-[13px] font-semibold text-gray-400 order-2 sm:order-1 sm:mb-1">
                           {match.participants.length}명 참여
                         </span>
+
+                        {match.status === MatchStatus.COMPLETED &&
+                          match.score && (
+                            <div className="order-1 sm:order-2">
+                              <div className="flex items-center justify-center bg-gray-50 px-3 py-1.5 rounded-xl">
+                                <span className="text-[16px] font-bold text-gray-900">
+                                  {match.score.us}
+                                </span>
+                                <span className="text-[14px] text-gray-400 mx-1.5 font-bold">
+                                  :
+                                </span>
+                                <span className="text-[16px] font-bold text-gray-500">
+                                  {match.score.opponent}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        {match.status !== MatchStatus.COMPLETED && (
+                          <div className="order-1 sm:order-2">
+                            <div className="flex items-center justify-center text-gray-300">
+                              <ChevronRight size={20} strokeWidth={2.5} />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -347,22 +391,24 @@ const Schedule: React.FC = () => {
         </div>
       )}
 
-      {/* 경기 생성 모달창 */}
+      {/* 경기 생성 모달창 / 바텀시트 */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="bg-primary px-6 py-4 flex justify-between items-center text-white">
-              <h3 className="font-bold text-lg">새로운 경기 일정 생성</h3>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 sm:p-4 transition-opacity">
+          <div className="bg-white w-full max-w-md sm:rounded-[28px] rounded-t-[28px] rounded-b-none shadow-xl overflow-hidden animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:fade-in sm:zoom-in-95 duration-300 pb-safe">
+            <div className="px-6 pt-7 pb-2 flex justify-between items-center text-gray-900 border-b border-gray-50">
+              <h3 className="font-bold text-[22px] tracking-tight">
+                새 일정 추가
+              </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="hover:bg-white/20 p-1 rounded-full transition-colors"
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full transition-colors bg-gray-50"
               >
-                <X size={20} />
+                <X size={20} strokeWidth={2.5} />
               </button>
             </div>
-            <form onSubmit={handleCreateMatch} className="p-6 space-y-4">
+            <form onSubmit={handleCreateMatch} className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">
+                <label className="block text-[14px] font-bold text-gray-700 mb-2">
                   상대팀 이름
                 </label>
                 <input
@@ -371,13 +417,13 @@ const Schedule: React.FC = () => {
                   value={newMatch.opponent}
                   onChange={handleInputChange}
                   placeholder="예: 경영대 FC"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                  className="w-full bg-[#f2f4f6] rounded-[16px] px-5 py-4 text-[16px] font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00a550]/20 transition-all border-none"
                   required
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                  <label className="block text-[14px] font-bold text-gray-700 mb-2">
                     경기 날짜
                   </label>
                   <input
@@ -385,12 +431,12 @@ const Schedule: React.FC = () => {
                     name="date"
                     value={newMatch.date}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                    className="w-full bg-[#f2f4f6] rounded-[16px] px-5 py-4 text-[16px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00a550]/20 transition-all border-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                  <label className="block text-[14px] font-bold text-gray-700 mb-2">
                     경기 시간
                   </label>
                   <input
@@ -398,13 +444,13 @@ const Schedule: React.FC = () => {
                     name="time"
                     value={newMatch.time}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                    className="w-full bg-[#f2f4f6] rounded-[16px] px-5 py-4 text-[16px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#00a550]/20 transition-all border-none"
                     required
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">
+                <label className="block text-[14px] font-bold text-gray-700 mb-2">
                   경기 장소
                 </label>
                 <input
@@ -413,15 +459,15 @@ const Schedule: React.FC = () => {
                   value={newMatch.location}
                   onChange={handleInputChange}
                   placeholder="예: 대운동장"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                  className="w-full bg-[#f2f4f6] rounded-[16px] px-5 py-4 text-[16px] font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00a550]/20 transition-all border-none"
                   required
                 />
               </div>
 
-              <div className="pt-2">
+              <div className="pt-4 pb-2">
                 <button
                   type="submit"
-                  className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-green-800 transition-colors shadow-md"
+                  className="w-full bg-[#00a550] text-white font-bold text-[16px] py-4 rounded-[16px] hover:bg-[#008f45] active:scale-[0.98] transition-all"
                 >
                   일정 등록하기
                 </button>
