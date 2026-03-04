@@ -6,6 +6,7 @@ import {
   Notice,
   UserStats,
   Goal,
+  UserRankingItem,
 } from '../types';
 import { supabase } from './supabase';
 
@@ -410,6 +411,87 @@ export const api = {
       assists: assists,
       attendanceRate: attendanceRate,
     };
+  },
+
+  // 멤버 전체 랭킹 조회 (올해 데이터 기준)
+  getUserRankings: async (): Promise<UserRankingItem[]> => {
+    try {
+      const currentYear = new Date().getFullYear();
+      const yearStart = `${currentYear}-01-01`;
+      const yearEnd = `${currentYear}-12-31`;
+
+      // 1. 모든 유저 정보 조회
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('*');
+
+      if (usersError) throw usersError;
+
+      // 2. 올해 경기들의 참석 기록 조회
+      const { data: participants, error: partError } = await supabase
+        .from('match_participants')
+        .select('user_id, matches!inner(date)')
+        .gte('matches.date', yearStart)
+        .lte('matches.date', yearEnd);
+
+      if (partError) throw partError;
+
+      // 3. 올해 득점/도움 기록 조회
+      const { data: goalsData, error: goalsError } = await supabase
+        .from('match_goals')
+        .select('scorer_id, assist_id, matches!inner(date)')
+        .gte('matches.date', yearStart)
+        .lte('matches.date', yearEnd);
+
+      if (goalsError) throw goalsError;
+
+      // 4. 유저별 통계 집계
+      const rankings = (users || []).map((dbUser: any): UserRankingItem => {
+        const userId = dbUser.id;
+
+        // 해당 유저의 올 시즌 출전 수
+        const matchesPlayed = (participants || []).filter(
+          (p: any) => p.user_id === userId
+        ).length;
+
+        // 해당 유저의 올 시즌 득점 수
+        const goals = (goalsData || []).filter(
+          (g: any) => g.scorer_id === userId
+        ).length;
+
+        // 해당 유저의 올 시즌 도움 수
+        const assists = (goalsData || []).filter(
+          (g: any) => g.assist_id === userId
+        ).length;
+
+        const user: User = {
+          id: dbUser.id,
+          email: dbUser.email,
+          name: dbUser.name,
+          shortName: dbUser.short_name,
+          birth: dbUser.birth,
+          gender: dbUser.gender,
+          position: dbUser.position,
+          backNumber: dbUser.back_number,
+          role: dbUser.role,
+          matches: dbUser.matches,
+          avatarUrl: dbUser.avatar_url || getDefaultAvatar(dbUser.gender),
+          joinedAt: dbUser.joined_at,
+        };
+
+        return {
+          user,
+          goals,
+          assists,
+          matchesPlayed,
+        };
+      });
+
+      return rankings;
+    } catch (error) {
+      console.error('getUserRankings 내부 오류:', error);
+      return [];
+    }
   },
 
   // 경기 상태 업데이트 (임원/매니저 전용)

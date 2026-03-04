@@ -8,6 +8,7 @@ import {
   Shield,
   LogOut,
   Bell,
+  Trophy,
 } from 'lucide-react';
 import { User as UserType, UserRole } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -90,6 +91,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
         <nav className="flex-1 p-4">
           <DesktopNavItem to="/" icon={Home} label="대시보드" />
           <DesktopNavItem to="/schedule" icon={Calendar} label="일정" />
+          <DesktopNavItem to="/ranking" icon={Trophy} label="랭킹" />
           <DesktopNavItem to="/notices" icon={Bell} label="공지사항" />
           {/* <DesktopNavItem to="/dues" icon={CreditCard} label="회비 관리" /> */}
           <DesktopNavItem to="/mypage" icon={User} label="마이페이지" />
@@ -173,9 +175,10 @@ const Layout: React.FC<LayoutProps> = ({ children, user }) => {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-gray-100/50 h-[68px] flex z-20 pb-safe shadow-[0_-4px_16px_rgba(0,0,0,0.02)] rounded-t-3xl">
         <NavItem to="/" icon={Home} label="홈" />
         <NavItem to="/schedule" icon={Calendar} label="일정" />
+        <NavItem to="/ranking" icon={Trophy} label="랭킹" />
         <NavItem to="/notices" icon={Bell} label="공지" />
         {/* <NavItem to="/dues" icon={CreditCard} label="회비" /> */}
-        {/* 모바일에서는 공간 제약으로 권한에 따라 4번째 메뉴 변경 */}
+        {/* 모바일에서는 공간 제약으로 권한에 따라 메뉴 변경 */}
         {user?.role === UserRole.EXECUTIVE ||
         user?.role === UserRole.MANAGER ? (
           <NavItem to="/admin" icon={Shield} label="관리" />

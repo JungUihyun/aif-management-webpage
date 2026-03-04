@@ -35,7 +35,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
   return (
     <div className="space-y-6">
-      {/* 웰컴 텍스트 헤더 (토스 스타일) */}
       <div className="pt-2 pb-2 px-2">
         <h1 className="text-[26px] leading-[1.35] font-bold text-gray-900 tracking-tight mb-1">
           {user.name}님,

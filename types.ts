@@ -80,6 +80,14 @@ export interface UserStats {
   attendanceRate: number; // 참석률 (백분율)
 }
 
+// 랭킹 리스트 아이템 인터페이스
+export interface UserRankingItem {
+  user: User;
+  goals: number;
+  assists: number;
+  matchesPlayed: number;
+}
+
 // 득점 기록 인터페이스
 export interface Goal {
   id: string;

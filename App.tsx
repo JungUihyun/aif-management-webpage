@@ -14,6 +14,7 @@ import Admin from './pages/Admin';
 import Notices from './pages/Notices';
 import LoginPage from './pages/Login';
 import EditProfile from './pages/EditProfile';
+import Ranking from './pages/Ranking';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // 메인 앱 라우팅 및 레이아웃 구성
@@ -44,6 +45,7 @@ const AppContent = () => {
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/match/:id" element={<MatchDetail user={user} />} />
           <Route path="/notices" element={<Notices user={user} />} />
+          <Route path="/ranking" element={<Ranking user={user} />} />
           <Route path="/mypage" element={<MyPage user={user} />} />
           <Route path="/mypage/edit" element={<EditProfile user={user} />} />
           {/* 관리자 페이지는 EXECUTIVE 권한일 떄만 접근 가능 */}
