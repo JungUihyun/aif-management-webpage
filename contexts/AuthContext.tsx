@@ -9,6 +9,7 @@ export interface AuthContextType {
   login: (id: string, password?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   updateUserRole: (role: UserRole) => void;
+  updateUserProfileContext: (data: Partial<User>) => void;
   isLoading: boolean;
 }
 
@@ -121,9 +122,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const updateUserProfileContext = (data: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...data });
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, updateUserRole, isLoading }}
+      value={{
+        user,
+        login,
+        logout,
+        updateUserRole,
+        updateUserProfileContext,
+        isLoading,
+      }}
     >
       {children}
     </AuthContext.Provider>

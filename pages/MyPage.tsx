@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { User, UserStats } from '../types';
 import { api } from '../services/api';
 import { getUserRoleLabel } from '../utils/formatters';
@@ -58,9 +59,12 @@ const MyPage: React.FC<MyPageProps> = ({ user }) => {
                 "{user.shortName}"
               </p>
             </div>
-            <button className="mt-5 sm:mt-0 text-[14px] font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 px-4 py-2.5 rounded-xl transition-colors">
+            <Link
+              to="/mypage/edit"
+              className="mt-5 sm:mt-0 text-[14px] font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 px-4 py-2.5 rounded-xl transition-colors"
+            >
               내 정보 수정
-            </button>
+            </Link>
           </div>
 
           {/* 유저 기본 정보 리스트 */}

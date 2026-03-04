@@ -243,6 +243,52 @@ export const api = {
     return true;
   },
 
+  // 유저 정보(프로필) 수정
+  updateUserProfile: async (
+    userId: string,
+    data: Partial<
+      Pick<
+        User,
+        | 'name'
+        | 'shortName'
+        | 'birth'
+        | 'gender'
+        | 'backNumber'
+        | 'position'
+        | 'email'
+        | 'avatarUrl'
+      >
+    >
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const updateData: any = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.shortName !== undefined) updateData.short_name = data.shortName;
+      if (data.birth !== undefined) updateData.birth = data.birth;
+      if (data.gender !== undefined) updateData.gender = data.gender;
+      if (data.backNumber !== undefined)
+        updateData.back_number = data.backNumber;
+      if (data.position !== undefined) updateData.position = data.position;
+      if (data.email !== undefined) updateData.email = data.email;
+      if (data.avatarUrl !== undefined) updateData.avatar_url = data.avatarUrl;
+
+      const { error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', userId);
+
+      if (error) {
+        console.error('유저 정보 수정 오류:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('유저 정보 수정 예외:', err);
+      return { success: false, error: err.message || 'Unknown error' };
+    }
+  },
+
   // 유저 개인 통계 조회 (마이페이지용)
   getUserStats: async (userId: string): Promise<UserStats> => {
     // 현재 연도의 시작일과 종료일 계산
