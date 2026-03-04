@@ -40,7 +40,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <h1 className="text-[26px] leading-[1.35] font-bold text-gray-900 tracking-tight mb-1">
           {user.name}님,
           <br />
-          오늘도 파이팅할까요?
+          AIF에 오신 것을 환영합니다.
         </h1>
         <p className="text-gray-500 text-[15px] font-medium mt-2">
           FC AIF 팀 현황 및 일정

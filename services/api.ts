@@ -289,6 +289,41 @@ export const api = {
     }
   },
 
+  // 아바타(프로필 이미지) 업로드
+  uploadAvatar: async (
+    userId: string,
+    file: File
+  ): Promise<{ success: boolean; url?: string; error?: string }> => {
+    try {
+      // 파일 확장자 추출 (예: 'image.png' -> 'png')
+      const fileExt = file.name.split('.').pop();
+      // 충돌 방지를 위한 랜덤 파일명 생성 (예: '123_456789.png')
+      const fileName = `${userId}_${Math.random().toString(36).substring(2, 9)}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // avatars 버킷에 업로드
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('이미지 업로드 오류:', uploadError);
+        return { success: false, error: uploadError.message };
+      }
+
+      // Public URL 가져오기
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+      return { success: true, url: data.publicUrl };
+    } catch (err: any) {
+      console.error('이미지 업로드 예외:', err);
+      return {
+        success: false,
+        error: err.message || '업로드 중 오류가 발생했습니다.',
+      };
+    }
+  },
+
   // 유저 개인 통계 조회 (마이페이지용)
   getUserStats: async (userId: string): Promise<UserStats> => {
     // 현재 연도의 시작일과 종료일 계산
