@@ -36,7 +36,7 @@ const Ranking: React.FC<RankingProps> = ({ user }) => {
       .sort((a, b) => {
         if (b[type] === a[type]) {
           // 동률 시 출전수나 이름 순 등으로 추가 정렬 가능
-          return a.user.name.localeCompare(b.user.name);
+          return (a.user.name || '').localeCompare(b.user.name || '');
         }
         return b[type] - a[type];
       })
@@ -51,7 +51,7 @@ const Ranking: React.FC<RankingProps> = ({ user }) => {
   const groupedRankings = React.useMemo(() => {
     const groups: Record<string, UserRankingItem[]> = {};
     rankings.forEach((item) => {
-      const year = item.user.id.substring(2, 4);
+      const year = (item.user.id || '').substring(2, 4);
       if (!groups[year]) groups[year] = [];
       groups[year].push(item);
     });
@@ -65,7 +65,7 @@ const Ranking: React.FC<RankingProps> = ({ user }) => {
     sortedYears.forEach((year) => {
       groups[year].sort((a, b) => {
         if (b.matchesPlayed === a.matchesPlayed) {
-          return a.user.name.localeCompare(b.user.name);
+          return (a.user.name || '').localeCompare(b.user.name || '');
         }
         return b.matchesPlayed - a.matchesPlayed;
       });
@@ -131,7 +131,7 @@ const Ranking: React.FC<RankingProps> = ({ user }) => {
                     </>
                   )}
                   <span className="truncate">
-                    {item.user.id.substring(2, 4)}학번
+                    {item.user.id?.substring(2, 4) || '??'}학번
                   </span>
                   <span className="mx-1 sm:mx-1.5 text-gray-300">·</span>
                   <span className="font-medium text-gray-600 truncate">
@@ -187,7 +187,7 @@ const Ranking: React.FC<RankingProps> = ({ user }) => {
             unit="어시"
           />
           <PodiumWidget
-            title="개근상"
+            title="참여율"
             data={topPlayers}
             type="matchesPlayed"
             unit="경기"
@@ -257,6 +257,7 @@ const Ranking: React.FC<RankingProps> = ({ user }) => {
                             </>
                           )}
                           <span className="font-medium text-gray-600 truncate">
+                            {item.user.id?.substring(2, 4) || '??'}학번 ·{' '}
                             {item.user.position || '미지정'}
                           </span>
                         </div>
